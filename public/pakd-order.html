@@ -67,9 +67,6 @@
   .divider{display:flex;align-items:center;gap:12px;margin:20px 0;color:var(--sub);font-size:12px;font-weight:700;letter-spacing:.08em}
   .divider::before,.divider::after{content:"";flex:1;height:1px;background:var(--line)}
 
-  .formcard{background:rgba(255,255,255,0.05);border:1px solid var(--line);border-radius:20px;padding:20px}
-  .formcard h2{font-family:var(--fh);font-size:17px;font-weight:700;margin-bottom:4px;letter-spacing:-.02em}
-  .formcard .sub{font-size:12.5px;color:var(--sub);margin-bottom:14px;line-height:1.5}
   label{display:block;font-size:11px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.07em;margin:12px 0 6px}
   input{width:100%;padding:13px 14px;border:1.5px solid rgba(255,255,255,.14);border-radius:12px;font-family:var(--fb);font-size:15px;color:#fff;background:rgba(255,255,255,.06);outline:none;-webkit-appearance:none}
   input::placeholder{color:rgba(154,166,189,.7)}
@@ -123,7 +120,6 @@
       </div>
     </div>
     <button class="upsend" id="up-send" disabled>Send it — we reply within the hour</button>
-    <div class="upfine">Prefer email? Forward your order email to <b id="email-display" style="color:#fff;cursor:pointer;text-decoration:underline;text-underline-offset:3px">orders.pakd@gmail.com</b> <span id="copied" style="color:#8ceec9;font-weight:700;display:none">copied ✓</span><br /><span>(tap to copy — nothing else needed, we reply for the address)</span></div>
 
     <div class="wts" style="margin-top:18px">
       <div class="wtsk">WHAT TO SEND (SCREENSHOTS ARE PERFECT)</div>
@@ -151,24 +147,9 @@
       <div class="wtsplus">That's it — send either one and <b>we reply within the hour</b> to grab your delivery address.</div>
     </div>
   </div>
-
-  <div class="divider">HAVEN'T ORDERED YET? LEAVE YOUR DETAILS</div>
-
-  <div class="formcard" id="formcard">
-    <h2>Tell us where it's going</h2>
-    <p class="sub">Leave your details now — then when your order's ready, one text and it's on its way.</p>
-
-    <label for="o-name">Name</label>
-    <input id="o-name" placeholder="First name's fine" autocomplete="given-name" />
-
-    <label for="o-phone">Mobile</label>
-    <input id="o-phone" placeholder="04xx xxx xxx" inputmode="tel" autocomplete="tel" />
-
-    <label for="o-suburb">Delivery suburb <span style="text-transform:none;letter-spacing:0;font-weight:500">(so we line up the nearest driver)</span></label>
-    <input id="o-suburb" placeholder="e.g. Marrickville (where it's delivered)" />
-
-    <button class="send" id="o-send">Count me in</button>
-    <p class="fine">Free trial · no payment details · pickup &amp; drop-off anywhere in Sydney (Brisbane very soon). You don't need to be in Sydney yourself — sending to someone here works too.</p>
+  <div style="text-align:center;font-size:13px;color:var(--sub);line-height:1.6;margin:18px 8px 0">
+    Haven't ordered yet? Place your click &amp; collect with the store as normal —
+    then come back here with the screenshot. <b style="color:#fff">This page is all you need.</b>
   </div>
 
   <div class="done" id="done">
@@ -218,16 +199,9 @@
   };
   /* ============================================================================== */
   var db = null;
-  try { if (FIREBASE_CONFIG.apiKey !== "PASTE_ME"){ firebase.initializeApp(FIREBASE_CONFIG); db = firebase.firestore(); } } catch(e){}/* ==== EDIT THIS LINE ==== */
-  var PAKD_EMAIL = "orders.pakd@gmail.com";
-  /* ======================== */
+  try { if (FIREBASE_CONFIG.apiKey !== "PASTE_ME"){ firebase.initializeApp(FIREBASE_CONFIG); db = firebase.firestore(); } } catch(e){}
 
   var $ = function(id){ return document.getElementById(id); };
-  $("email-display").textContent = PAKD_EMAIL;
-  $("email-display").addEventListener("click", function(){
-    var done = function(){ $("copied").style.display = "inline"; setTimeout(function(){ $("copied").style.display = "none"; }, 1800); };
-    if (navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(PAKD_EMAIL).then(done).catch(done); } else { done(); }
-  });
 
   /* ---- upload flow ---- */
   var upData = null;
@@ -278,8 +252,6 @@
   $("up-suburb").addEventListener("input", maybeEnable);
   function showSuccess(orderId){
     document.querySelector(".textcard").style.display = "none";
-    document.querySelector(".divider").style.display = "none";
-    $("formcard").style.display = "none";
     $("done").style.display = "block";
     if (orderId){
       var link = location.origin + location.pathname + "?order=" + orderId;
@@ -322,14 +294,14 @@
         notify().then(function(res){ if (!res.ok) throw new Error("bad"); showSuccess(null); })
           .catch(function(){
             btn.disabled = false; btn.textContent = "Send it — we reply within the hour";
-            $("up-sub").textContent = "Hmm, that didn't send — try forwarding the email instead (address below)";
+            $("up-sub").textContent = "Hmm, that didn't send — check your connection and tap Send again";
           });
       });
     } else {
       notify().then(function(res){ if (!res.ok) throw new Error("bad"); showSuccess(null); })
         .catch(function(){
           btn.disabled = false; btn.textContent = "Send it — we reply within the hour";
-          $("up-sub").textContent = "Hmm, that didn't send — try forwarding the email instead (address below)";
+          $("up-sub").textContent = "Hmm, that didn't send — check your connection and tap Send again";
         });
     }
   });
@@ -339,8 +311,6 @@
   var laterId = params.get("order");
   if (laterId && db){
     document.querySelector(".textcard").style.display = "none";
-    document.querySelector(".divider").style.display = "none";
-    $("formcard").style.display = "none";
     document.querySelector("h1").innerHTML = 'Add your barcode,<br /><span class="grad">and you\u2019re done.</span>';
     document.querySelector(".lede").textContent = "Upload the \u201Cready to collect\u201D email screenshot below \u2014 your driver heads off the same day.";
     $("later-mode").style.display = "block";
@@ -371,35 +341,6 @@
       });
     });
   }
-
-  $("o-send").addEventListener("click", function(){
-    var name = $("o-name").value.trim();
-    var phone = $("o-phone").value.trim();
-    var suburb = $("o-suburb").value.trim();
-    if (!name){ $("o-name").focus(); $("o-name").style.borderColor = "#ef4444"; return; }
-    if (phone.replace(/\D/g,"").length < 8){ $("o-phone").focus(); $("o-phone").style.borderColor = "#ef4444"; return; }
-    if (!suburb){ $("o-suburb").focus(); $("o-suburb").style.borderColor = "#ef4444"; return; }
-    var btn = $("o-send");
-    btn.disabled = true; btn.textContent = "Sending…";
-    fetch("https://formspree.io/f/meewkewb", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "Accept": "application/json" },
-      body: JSON.stringify({
-        _subject: "CUSTOMER ORDER (order page)",
-        type: "customer-order",
-        name: name, phone: phone, suburb: suburb
-      })
-    }).then(function(res){
-      if (res.ok){
-        $("formcard").style.display = "none";
-        $("done").style.display = "block";
-      } else { throw new Error("bad"); }
-    }).catch(function(){
-      btn.disabled = false; btn.textContent = "Count me in";
-      btn.style.background = "#ef4444";
-      setTimeout(function(){ btn.style.background = ""; }, 1600);
-    });
-  });
 })();
 </script>
 </body>
