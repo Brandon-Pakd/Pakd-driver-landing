@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="theme-color" content="#0b1220" />
+<title>Pakd · Driver Jobs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Sora:wght@600;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --canvas:#0b1220;--canvas2:#0f1a2e;--bg:#f5f6fb;--card:#fff;
+    --ink:#191d21;--sub:#6b7280;--muted:#9aa1ad;--line:#eceef3;--lineHi:#e2e5ed;
+    --indigo:#6366f1;--indigoDeep:#5e53f6;--indigoSoft:#eef0fe;
+    --emerald:#10b981;--emeraldSoft:#e7f9f1;--amber:#f59e0b;--amberSoft:#fdf3e0;--red:#ef4444;
+    --fb:'Plus Jakarta Sans',-apple-system,sans-serif;--fh:'Sora',-apple-system,sans-serif;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0;font-family:var(--fb);background:var(--bg);color:var(--ink)}
+  body{padding-bottom:50px}
+  .header{background:linear-gradient(180deg,var(--canvas),var(--canvas2));padding:16px 18px;padding-top:max(16px,env(safe-area-inset-top));color:#fff;position:relative;overflow:hidden}
+  .header::before{content:"";position:absolute;top:-80px;right:-60px;width:260px;height:260px;background:radial-gradient(circle,rgba(124,115,240,.35),transparent 65%);border-radius:50%}
+  .brand{display:flex;align-items:center;gap:9px;position:relative}
+  .brand .name{font-weight:800;font-size:18px;letter-spacing:-.03em}
+  .brand .badge{font-size:10.5px;font-weight:700;color:#c7c9ff;border:1px solid rgba(99,102,241,.4);border-radius:20px;padding:3px 9px;background:rgba(99,102,241,.12);letter-spacing:.05em}
+  .header p{font-size:12px;color:#9aa6bd;margin:8px 0 0;position:relative;line-height:1.5}
+  .wrap{max-width:560px;margin:0 auto;padding:14px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:10px}
+  .label{font-weight:700;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px}
+  input{width:100%;padding:12px 13px;border:1.5px solid var(--line);border-radius:11px;font-family:var(--fb);font-size:15px;color:var(--ink);outline:none;-webkit-appearance:none;background:#fff;margin-bottom:8px}
+  input:focus{border-color:var(--indigo);box-shadow:0 0 0 3px var(--indigoSoft)}
+  .btn{width:100%;background:var(--indigo);color:#fff;border:none;border-radius:12px;padding:14px;font-family:var(--fb);font-weight:700;font-size:14.5px;cursor:pointer;box-shadow:0 6px 18px rgba(99,102,241,.3)}
+  .btn:disabled{background:#c4c8d4;box-shadow:none;cursor:not-allowed}
+  .sect{font-family:var(--fh);font-weight:700;font-size:16px;letter-spacing:-.02em;margin:16px 2px 10px}
+  .job{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:10px}
+  .job .top{display:flex;align-items:center;gap:8px}
+  .job .store{font-weight:800;font-size:15.5px;flex:1}
+  .pay{background:var(--emeraldSoft);color:#0e7a58;font-weight:800;font-size:13.5px;border-radius:20px;padding:5px 12px}
+  .job .meta{font-size:12.5px;color:var(--sub);margin-top:5px;line-height:1.55}
+  .job .meta b{color:var(--ink)}
+  .claim{margin-top:11px;width:100%;background:var(--indigo);color:#fff;border:none;border-radius:11px;padding:12px;font-family:var(--fb);font-weight:700;font-size:14px;cursor:pointer}
+  .mine{border-color:var(--indigo);box-shadow:0 0 0 3px var(--indigoSoft)}
+  .bar{margin-top:10px;border:1px solid var(--line);border-radius:11px;overflow:hidden}
+  .bar img{display:block;width:100%}
+  .bar .cap{font-size:10px;font-weight:800;color:var(--indigoDeep);background:var(--indigoSoft);padding:6px;text-align:center;letter-spacing:.03em}
+  .auth{background:#fbfbfe;border:1px solid var(--lineHi);border-radius:11px;padding:11px;margin-top:9px;font-size:11.5px;line-height:1.55;color:#3a3f4b}
+  .auth b{color:var(--ink)}
+  .auth .ttl{font-size:9.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--indigoDeep);margin-bottom:4px}
+  .steps{margin:10px 0 0;padding:0;list-style:none;font-size:12px;color:#3a3f4b;line-height:1.5}
+  .steps li{display:flex;gap:8px;margin-bottom:5px}
+  .steps .n{width:17px;height:17px;border-radius:50%;background:var(--indigoSoft);color:var(--indigoDeep);font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+  .donebtn{margin-top:11px;width:100%;background:var(--emerald);color:#fff;border:none;border-radius:11px;padding:12px;font-family:var(--fb);font-weight:700;font-size:14px;cursor:pointer}
+  .empty{text-align:center;color:var(--muted);font-size:13px;padding:24px 10px;line-height:1.6}
+  .offline{background:var(--amberSoft);border:1px solid rgba(245,158,11,.4);border-radius:14px;padding:13px;font-size:12.5px;color:#7a5200;line-height:1.55;margin-bottom:10px;display:none}
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--canvas);color:#fff;font-size:13px;font-weight:600;border-radius:30px;padding:10px 20px;transition:transform .25s;z-index:99}
+  .toast.show{transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="brand">
+    <svg width="24" height="24" viewBox="0 0 400 400"><defs><linearGradient id="lg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#7c73f0"/><stop offset="100%" stop-color="#5e53f6"/></linearGradient></defs><rect x="40" y="40" width="320" height="320" rx="92" fill="url(#lg)"/><g fill="none" stroke="#fff" stroke-width="25" stroke-linecap="round" stroke-linejoin="round"><path d="M196 132L116 175"/><path d="M196 132L234 152"/><path d="M116 175L196 217"/><path d="M116 175L116 257"/><path d="M116 257L196 299"/><path d="M196 217L196 299"/><path d="M196 217L282 153"/><path d="M252 153L282 153L282 184"/><path d="M276 200L276 257L196 299"/></g></svg>
+    <span class="name">Pakd</span>
+    <span class="badge">DRIVER JOBS</span>
+  </div>
+  <p>Live jobs appear below the moment they're posted. First to claim gets it — paid straight after delivery.</p>
+</div>
+
+<div class="wrap">
+  <div class="offline" id="offline">Can't reach the job board right now — check your connection, or the board may not be set up yet. Jobs also get posted in the WhatsApp group.</div>
+
+  <div class="card" id="regcard">
+    <div class="label">Set up once — so jobs can be locked to you</div>
+    <input id="r-name" placeholder="Your full name (matches your ID)" autocomplete="name" />
+    <input id="r-suburb" placeholder="Your suburb" />
+    <input id="r-phone" placeholder="Mobile" inputmode="tel" autocomplete="tel" />
+    <button class="btn" id="r-save">Start seeing jobs</button>
+  </div>
+
+  <div id="board" style="display:none">
+    <div class="sect" id="mine-title" style="display:none">Your jobs</div>
+    <div id="mine"></div>
+    <div class="sect">Open jobs</div>
+    <div id="open"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+(function(){
+  /* ==== PASTE YOUR FIREBASE CONFIG HERE (same block as pakd-ops.html) ==== */
+  var FIREBASE_CONFIG = {
+    apiKey: "PASTE_ME",
+    authDomain: "PASTE_ME.firebaseapp.com",
+    projectId: "PASTE_ME",
+    storageBucket: "PASTE_ME.appspot.com",
+    messagingSenderId: "PASTE_ME",
+    appId: "PASTE_ME"
+  };
+  /* ======================================================================= */
+
+  var $ = function(id){ return document.getElementById(id); };
+  var esc = function(s){ return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); };
+  var toast = function(m){ var t=$("toast"); t.textContent=m; t.classList.add("show"); setTimeout(function(){ t.classList.remove("show"); }, 2200); };
+
+  var me = null;
+  try { me = JSON.parse(localStorage.getItem("pakd-driver-me") || "null"); } catch(e){}
+
+  var db = null;
+  try {
+    if (FIREBASE_CONFIG.apiKey !== "PASTE_ME") {
+      firebase.initializeApp(FIREBASE_CONFIG);
+      db = firebase.firestore();
+    }
+  } catch(e){}
+
+  function showBoard(){
+    $("regcard").style.display = me ? "none" : "block";
+    $("board").style.display = me ? "block" : "none";
+  }
+
+  $("r-save").onclick = function(){
+    var name = $("r-name").value.trim();
+    var suburb = $("r-suburb").value.trim();
+    var phone = $("r-phone").value.trim();
+    if (!name || phone.replace(/\D/g,"").length < 8){ toast("Name and mobile needed"); return; }
+    me = { name: name, suburb: suburb, phone: phone, id: "drv_" + Date.now() };
+    localStorage.setItem("pakd-driver-me", JSON.stringify(me));
+    showBoard(); listen();
+    toast("You're in, " + name.split(" ")[0]);
+  };
+
+  function jobMetaLine(j){
+    return "<b>" + esc(j.pickupArea || j.store || "Store") + "</b> → " + esc(j.dropArea || "nearby") +
+      (j.window ? " · " + esc(j.window) : "");
+  }
+
+  function renderOpen(jobs){
+    var w = $("open");
+    var open = jobs.filter(function(j){ return j.status === "open"; });
+    document.title = open.length ? "(" + open.length + ") Pakd · Driver Jobs" : "Pakd · Driver Jobs";
+    if (!open.length){ w.innerHTML = '<div class="empty">No open jobs right now — new ones appear here automatically. Keep notifications on for the WhatsApp group.</div>'; return; }
+    w.innerHTML = open.map(function(j){
+      return '<div class="job"><div class="top"><div class="store">' + esc(j.store || "Pickup job") + '</div><span class="pay">$' + esc(j.pay || "?") + '</span></div>' +
+        '<div class="meta">' + jobMetaLine(j) + '<br/>One pickup, one drop. Full details unlock when you claim.</div>' +
+        '<button class="claim" data-claim="' + j.id + '">I\'ve got it</button></div>';
+    }).join("");
+    w.querySelectorAll("[data-claim]").forEach(function(b){
+      b.onclick = function(){
+        b.disabled = true; b.textContent = "Claiming…";
+        var ref = db.collection("jobs").doc(b.getAttribute("data-claim"));
+        db.runTransaction(function(tx){
+          return tx.get(ref).then(function(doc){
+            if (!doc.exists || doc.data().status !== "open") throw new Error("taken");
+            tx.update(ref, { status: "claimed", driverName: me.name, driverPhone: me.phone, driverId: me.id, claimedAt: new Date().toISOString() });
+          });
+        }).then(function(){
+          toast("It's yours — details unlocked below");
+        }).catch(function(){
+          toast("Just missed it — someone claimed it first");
+        });
+      };
+    });
+  }
+
+  function renderMine(jobs){
+    var mine = jobs.filter(function(j){ return j.driverId === me.id && j.status !== "delivered"; });
+    $("mine-title").style.display = mine.length ? "block" : "none";
+    var w = $("mine");
+    w.innerHTML = mine.map(function(j){
+      var dateStr = new Date().toLocaleDateString("en-AU", { day:"numeric", month:"long", year:"numeric" });
+      return '<div class="job mine"><div class="top"><div class="store">' + esc(j.store || "Pickup job") + '</div><span class="pay">$' + esc(j.pay || "?") + ' on completion</span></div>' +
+        '<div class="meta">' + (j.orderNo ? "Order <b>#" + esc(j.orderNo) + "</b> · " : "") + 'placed by <b>' + esc(j.customer || "the customer") + '</b><br/>' +
+        'Deliver to: <b>' + esc(j.address || "address coming via WhatsApp") + '</b>' + (j.notes ? '<br/>Note: ' + esc(j.notes) : "") + '</div>' +
+        (j.barcode ? '<div class="bar"><img src="' + j.barcode + '" alt="collection barcode" /><div class="cap">SHOW THIS AT THE COUNTER — STAFF SCAN IT LIKE ANY COLLECTION</div></div>' : '<div class="meta" style="margin-top:8px;color:#b45309"><b>Barcode coming</b> — hold off until it appears here.</div>') +
+        '<div class="auth"><div class="ttl">Collection authority</div>I, <b>' + esc(j.customer || "the customer") + '</b>, authorise <b>' + esc(me.name) + '</b> — a verified Pakd driver — to collect ' + (j.orderNo ? "order <b>#" + esc(j.orderNo) + "</b>" : "my order") + ' from <b>' + esc(j.store || "the store") + '</b> on my behalf. The collector is my authorised representative for this collection only. Dated <b>' + dateStr + '</b>.</div>' +
+        '<ul class="steps">' +
+        '<li><span class="n">1</span>Head to the store — bring your photo ID just in case.</li>' +
+        '<li><span class="n">2</span>Show the barcode. If asked: the authority above — it names you.</li>' +
+        '<li><span class="n">3</span>Photo the sealed bag before leaving.</li>' +
+        '<li><span class="n">4</span>Deliver — photo at the door.</li>' +
+        '<li><span class="n">5</span>Send both photos in WhatsApp — paid straight away.</li></ul>' +
+        '<button class="donebtn" data-done="' + j.id + '">Mark delivered ✓</button></div>';
+    }).join("");
+    w.querySelectorAll("[data-done]").forEach(function(b){
+      b.onclick = function(){
+        if (!confirm("Delivered and photos sent?")) return;
+        db.collection("jobs").doc(b.getAttribute("data-done")).update({ status: "delivered", deliveredAt: new Date().toISOString() })
+          .then(function(){ toast("Legend. Payment on its way."); });
+      };
+    });
+  }
+
+  function listen(){
+    if (!db){ $("offline").style.display = "block"; return; }
+    db.collection("jobs").onSnapshot(function(snap){
+      var jobs = [];
+      snap.forEach(function(doc){ var d = doc.data(); d.id = doc.id; jobs.push(d); });
+      jobs.sort(function(a,b){ return (b.createdAt||"").localeCompare(a.createdAt||""); });
+      renderOpen(jobs); renderMine(jobs);
+    }, function(){ $("offline").style.display = "block"; });
+  }
+
+  showBoard();
+  if (me) listen();
+})();
+</script>
+</body>
+</html>

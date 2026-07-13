@@ -1,0 +1,493 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="theme-color" content="#0b1220" />
+<title>Pakd · Ops</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Sora:wght@600;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --canvas:#0b1220;--canvas2:#0f1a2e;--bg:#f5f6fb;--card:#fff;
+    --ink:#191d21;--sub:#6b7280;--muted:#9aa1ad;--line:#eceef3;--lineHi:#e2e5ed;
+    --indigo:#6366f1;--indigoDeep:#5e53f6;--indigoSoft:#eef0fe;
+    --emerald:#10b981;--emeraldSoft:#e7f9f1;--amber:#f59e0b;--amberSoft:#fdf3e0;--red:#ef4444;
+    --fb:'Plus Jakarta Sans',-apple-system,sans-serif;--fh:'Sora',-apple-system,sans-serif;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0;font-family:var(--fb);background:var(--bg);color:var(--ink)}
+  body{padding-bottom:50px}
+
+  .header{background:linear-gradient(180deg,var(--canvas),var(--canvas2));padding:16px 18px;padding-top:max(16px,env(safe-area-inset-top));color:#fff;position:relative;overflow:hidden}
+  .header::before{content:"";position:absolute;top:-80px;right:-60px;width:260px;height:260px;background:radial-gradient(circle,rgba(124,115,240,.35),transparent 65%);border-radius:50%}
+  .brand{display:flex;align-items:center;gap:9px;position:relative}
+  .brand .name{font-weight:800;font-size:18px;letter-spacing:-.03em}
+  .brand .badge{font-size:10.5px;font-weight:700;color:#c7c9ff;border:1px solid rgba(99,102,241,.4);border-radius:20px;padding:3px 9px;background:rgba(99,102,241,.12);letter-spacing:.05em}
+  .stats{display:flex;gap:8px;margin-top:12px;position:relative}
+  .stat{flex:1;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:9px 6px;text-align:center}
+  .stat .n{font-family:var(--fh);font-weight:700;font-size:19px}
+  .stat .l{font-size:9.5px;font-weight:700;color:#9aa6bd;text-transform:uppercase;letter-spacing:.06em;margin-top:1px}
+
+  .tabs{display:flex;gap:6px;padding:12px 14px 0;max-width:560px;margin:0 auto}
+  .tab{flex:1;background:none;border:1.5px solid var(--line);border-radius:12px;padding:10px;font-family:var(--fb);font-weight:700;font-size:13px;color:var(--sub);cursor:pointer}
+  .tab.on{background:var(--indigo);border-color:var(--indigo);color:#fff}
+
+  .wrap{max-width:560px;margin:0 auto;padding:12px 14px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:10px}
+  .label{font-weight:700;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px}
+  input,select,textarea{width:100%;padding:11px 12px;border:1.5px solid var(--line);border-radius:10px;font-family:var(--fb);font-size:14.5px;color:var(--ink);outline:none;-webkit-appearance:none;background:#fff;margin-bottom:8px}
+  input:focus,select:focus,textarea:focus{border-color:var(--indigo);box-shadow:0 0 0 3px var(--indigoSoft)}
+  textarea{resize:none;min-height:48px}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .btn{width:100%;background:var(--indigo);color:#fff;border:none;border-radius:12px;padding:13px;font-family:var(--fb);font-weight:700;font-size:14px;cursor:pointer}
+  .btn.ghost{background:none;border:1.5px solid var(--line);color:var(--sub)}
+  .btn.sm{width:auto;padding:8px 13px;font-size:12px;border-radius:9px}
+
+  .upmini{border:1.5px dashed var(--indigo);background:var(--indigoSoft);border-radius:10px;padding:10px;text-align:center;cursor:pointer;font-weight:700;font-size:12.5px;color:var(--indigoDeep);margin-bottom:8px}
+  .upmini.has{border-style:solid;border-color:var(--emerald);background:var(--emeraldSoft);color:var(--emerald)}
+  .upmini input{display:none}
+
+  /* order cards */
+  .order{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:13px 14px;margin-bottom:10px}
+  .order .top{display:flex;align-items:center;gap:8px}
+  .order .who{font-weight:800;font-size:15px;flex:1}
+  .status{font-size:10px;font-weight:800;letter-spacing:.05em;border-radius:20px;padding:4px 10px;text-transform:uppercase}
+  .s-new{background:var(--indigoSoft);color:var(--indigoDeep)}
+  .s-barcode{background:var(--amberSoft);color:#b45309}
+  .s-ready{background:#e0f2fe;color:#0369a1}
+  .s-out{background:#ede9fe;color:#6d28d9}
+  .s-done{background:var(--emeraldSoft);color:#0e7a58}
+  .order .meta{font-size:12.5px;color:var(--sub);margin-top:4px;line-height:1.5}
+  .order .meta b{color:var(--ink)}
+  .order .acts{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+  .order .acts button{background:none;border:1.5px solid var(--line);border-radius:9px;padding:7px 11px;font-family:var(--fb);font-weight:700;font-size:11.5px;color:var(--sub);cursor:pointer}
+  .order .acts .adv{border-color:var(--indigo);color:var(--indigoDeep);background:var(--indigoSoft)}
+  .order .acts .jc{border-color:var(--emerald);color:#0e7a58;background:var(--emeraldSoft)}
+  .order .acts .del{color:var(--red)}
+
+  .driver{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:8px}
+  .driver .av{width:36px;height:36px;border-radius:50%;background:var(--indigoSoft);color:var(--indigoDeep);font-weight:800;font-size:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .driver .dn{font-weight:800;font-size:14px}
+  .driver .ds{font-size:12px;color:var(--sub)}
+  .driver .del{margin-left:auto;background:none;border:none;color:var(--red);font-weight:700;font-size:11.5px;cursor:pointer;font-family:var(--fb)}
+
+  .empty{text-align:center;color:var(--muted);font-size:13px;padding:26px 10px;line-height:1.6}
+
+  /* job card modal */
+  .modal{position:fixed;inset:0;background:rgba(11,18,32,.75);z-index:50;display:none;overflow-y:auto;padding:16px}
+  .modal.open{display:block}
+  .jc{max-width:440px;margin:0 auto;background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+  .jc-head{background:linear-gradient(135deg,var(--canvas),#16213c);color:#fff;padding:15px 16px}
+  .jc-brand{display:flex;align-items:center;gap:8px;margin-bottom:9px}
+  .jc-brand b{font-size:14px;font-weight:800}
+  .jc-brand .tag{margin-left:auto;font-size:9.5px;font-weight:700;letter-spacing:.06em;color:#c7c9ff;border:1px solid rgba(124,115,240,.5);border-radius:20px;padding:3px 8px}
+  .jc-title{font-family:var(--fh);font-size:18px;font-weight:700;letter-spacing:-.02em}
+  .jc-pay{display:inline-block;background:rgba(16,185,129,.15);border:1px solid rgba(16,185,129,.4);color:#7ef0c6;font-weight:800;font-size:14px;border-radius:30px;padding:5px 13px;margin-top:9px}
+  .jc-sec{padding:12px 16px;border-bottom:1px solid var(--line)}
+  .jc-sec:last-child{border-bottom:none}
+  .jc-k{font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+  .jc-v{font-weight:800;font-size:14.5px;line-height:1.35}
+  .jc-s{font-size:12px;color:var(--sub);margin-top:2px;line-height:1.45}
+  .jc-s b{color:var(--ink)}
+  .jc-bar{margin-top:9px;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  .jc-bar img{display:block;width:100%}
+  .jc-bar .cap{font-size:10px;font-weight:800;color:var(--indigoDeep);background:var(--indigoSoft);padding:6px;text-align:center;letter-spacing:.03em}
+  .jc-auth{background:#fbfbfe;border:1px solid var(--lineHi);border-radius:10px;padding:10px;margin-top:9px;font-size:11.5px;line-height:1.55;color:#3a3f4b}
+  .jc-auth b{color:var(--ink)}
+  .jc-auth .ttl{font-size:9.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--indigoDeep);margin-bottom:4px}
+  .jc-steps{margin:0;padding:0;list-style:none;font-size:11.5px;color:#3a3f4b;line-height:1.5}
+  .jc-steps li{display:flex;gap:8px;margin-bottom:5px}
+  .jc-steps .n{width:16px;height:16px;border-radius:50%;background:var(--indigoSoft);color:var(--indigoDeep);font-size:9.5px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+  .jc-foot{background:#fbfbfe;padding:9px 16px;font-size:10px;color:var(--muted);text-align:center}
+  .modal .close{max-width:440px;margin:12px auto 0;display:block;width:100%;background:#fff;border:none;border-radius:12px;padding:13px;font-family:var(--fb);font-weight:700;font-size:14px;cursor:pointer}
+  .modal .hint{max-width:440px;margin:10px auto 0;text-align:center;font-size:12px;color:#c7c9ff}
+
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--canvas);color:#fff;font-size:13px;font-weight:600;border-radius:30px;padding:10px 20px;transition:transform .25s;z-index:99}
+  .toast.show{transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="brand">
+    <svg width="24" height="24" viewBox="0 0 400 400"><defs><linearGradient id="lg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#7c73f0"/><stop offset="100%" stop-color="#5e53f6"/></linearGradient></defs><rect x="40" y="40" width="320" height="320" rx="92" fill="url(#lg)"/><g fill="none" stroke="#fff" stroke-width="25" stroke-linecap="round" stroke-linejoin="round"><path d="M196 132L116 175"/><path d="M196 132L234 152"/><path d="M116 175L196 217"/><path d="M116 175L116 257"/><path d="M116 257L196 299"/><path d="M196 217L196 299"/><path d="M196 217L282 153"/><path d="M252 153L282 153L282 184"/><path d="M276 200L276 257L196 299"/></g></svg>
+    <span class="name">Pakd</span>
+    <span class="badge">OPS CONSOLE</span>
+  </div>
+  <div class="stats">
+    <div class="stat"><div class="n" id="st-active">0</div><div class="l">Active</div></div>
+    <div class="stat"><div class="n" id="st-waiting">0</div><div class="l">Awaiting barcode</div></div>
+    <div class="stat"><div class="n" id="st-done">0</div><div class="l">Delivered</div></div>
+    <div class="stat"><div class="n" id="st-drivers">0</div><div class="l">Drivers</div></div>
+  </div>
+</div>
+
+<div class="tabs">
+  <button class="tab on" data-t="orders">Orders</button>
+  <button class="tab" data-t="inbox" id="tab-inbox">Inbox</button>
+  <button class="tab" data-t="new">+ New order</button>
+  <button class="tab" data-t="drivers">Drivers</button>
+</div>
+
+<div class="wrap" id="v-orders">
+  <div id="orders-list"></div>
+</div>
+
+<div class="wrap" id="v-inbox" style="display:none">
+  <div id="inbox-list"><div class="empty">Inbox shows live customer orders from your order page. Nothing yet — or the live board isn't configured.</div></div>
+</div>
+
+<div class="wrap" id="v-new" style="display:none">
+  <div class="card">
+    <div class="label">Customer</div>
+    <div class="row2"><input id="n-name" placeholder="Name" /><input id="n-phone" placeholder="Mobile" inputmode="tel" /></div>
+    <div class="label" style="margin-top:6px">Pickup</div>
+    <div class="row2"><input id="n-store" placeholder="Store (e.g. Kmart Broadway)" /><input id="n-orderno" placeholder="Order number" /></div>
+    <label class="upmini" id="n-upzone"><span id="n-uptext">Attach barcode / confirmation screenshot (optional now)</span><input type="file" id="n-file" accept="image/*" /></label>
+    <div class="label" style="margin-top:6px">Deliver</div>
+    <input id="n-address" placeholder="Delivery address" />
+    <div class="row2"><input id="n-pay" placeholder="Driver pay (e.g. 15)" inputmode="decimal" /><input id="n-fee" placeholder="Customer fee (0 = free trial)" inputmode="decimal" /></div>
+    <textarea id="n-notes" placeholder="Notes (gate code, timing, keep-it, etc.)"></textarea>
+    <button class="btn" id="n-save">Add order</button>
+  </div>
+</div>
+
+<div class="wrap" id="v-drivers" style="display:none">
+  <div class="card">
+    <div class="label">Add driver</div>
+    <div class="row2"><input id="d-name" placeholder="Name" /><input id="d-suburb" placeholder="Suburb" /></div>
+    <input id="d-phone" placeholder="Mobile" inputmode="tel" />
+    <button class="btn" id="d-save">Add driver</button>
+  </div>
+  <div id="drivers-list"></div>
+</div>
+
+<div class="modal" id="jc-modal">
+  <div class="jc" id="jc-card"></div>
+  <div class="hint">Screenshot the card, send it to the driver on WhatsApp.</div>
+  <button class="close" id="jc-close">Close</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+(function(){
+  /* ==== PASTE YOUR FIREBASE CONFIG HERE (same block as pakd-jobs.html) ==== */
+  var FIREBASE_CONFIG = {
+    apiKey: "PASTE_ME",
+    authDomain: "PASTE_ME.firebaseapp.com",
+    projectId: "PASTE_ME",
+    storageBucket: "PASTE_ME.appspot.com",
+    messagingSenderId: "PASTE_ME",
+    appId: "PASTE_ME"
+  };
+  /* ======================================================================== */
+  var db = null;
+  try { if (FIREBASE_CONFIG.apiKey !== "PASTE_ME"){ firebase.initializeApp(FIREBASE_CONFIG); db = firebase.firestore(); } } catch(e){}
+
+  var OK = "pakd-ops-orders-v1", DK = "pakd-ops-drivers-v1";
+  var orders = [], drivers = [];
+  try { orders = JSON.parse(localStorage.getItem(OK) || "[]"); } catch(e){}
+  try { drivers = JSON.parse(localStorage.getItem(DK) || "[]"); } catch(e){}
+  var save = function(){ localStorage.setItem(OK, JSON.stringify(orders)); localStorage.setItem(DK, JSON.stringify(drivers)); };
+  var $ = function(id){ return document.getElementById(id); };
+  var esc = function(s){ return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); };
+  var toast = function(m){ var t=$("toast"); t.textContent=m; t.classList.add("show"); setTimeout(function(){ t.classList.remove("show"); }, 2000); };
+
+  var STATUSES = ["new","barcode","ready","out","done"];
+  var SLABEL = { new:"New", barcode:"Awaiting barcode", ready:"Ready to dispatch", out:"Driver out", done:"Delivered" };
+  var SNEXT = { new:"barcode", barcode:"ready", ready:"out", out:"done" };
+  var SNEXTLABEL = { new:"Mark awaiting barcode", barcode:"Barcode in → ready", ready:"Dispatched → driver out", out:"Delivered ✓" };
+
+  /* tabs */
+  document.querySelectorAll(".tab").forEach(function(b){
+    b.onclick = function(){
+      document.querySelectorAll(".tab").forEach(function(x){ x.classList.remove("on"); });
+      b.classList.add("on");
+      ["orders","inbox","new","drivers"].forEach(function(v){ $("v-"+v).style.display = b.getAttribute("data-t")===v ? "block":"none"; });
+    };
+  });
+
+  /* image compress */
+  var pendingBarcode = null;
+  function compress(dataUrl, cb){
+    try {
+      var img = new Image();
+      img.onload = function(){
+        try {
+          var maxW = 1100, scale = Math.min(1, maxW / img.width);
+          var c = document.createElement("canvas");
+          c.width = Math.round(img.width*scale); c.height = Math.round(img.height*scale);
+          c.getContext("2d").drawImage(img,0,0,c.width,c.height);
+          cb(c.toDataURL("image/jpeg", 0.82));
+        } catch(e){ cb(dataUrl); }
+      };
+      img.onerror = function(){ cb(dataUrl); };
+      img.src = dataUrl;
+    } catch(e){ cb(dataUrl); }
+  }
+  $("n-file").addEventListener("change", function(e){
+    var f = e.target.files && e.target.files[0]; if (!f) return;
+    var r = new FileReader();
+    r.onload = function(){ compress(r.result, function(out){
+      pendingBarcode = out;
+      $("n-upzone").classList.add("has");
+      $("n-uptext").textContent = "Screenshot attached ✓ (tap to change)";
+    }); };
+    r.readAsDataURL(f);
+  });
+
+  /* inbox (live customer orders) */
+  var inboxDocs = [];
+  var importingDocId = null;
+  function renderInbox(){
+    var w = $("inbox-list"); if (!w) return;
+    var open = inboxDocs.filter(function(d){ return !d.imported; });
+    $("tab-inbox").textContent = open.length ? "Inbox (" + open.length + ")" : "Inbox";
+    if (!open.length){ w.innerHTML = '<div class="empty">No new customer orders. They appear here live from your order page.</div>'; return; }
+    w.innerHTML = open.map(function(d){
+      var when = d.createdAt ? new Date(d.createdAt).toLocaleString("en-AU", { day:"numeric", month:"short", hour:"numeric", minute:"2-digit" }) : "";
+      return '<div class="order">' +
+        '<div class="top"><div class="who">' + esc(d.phone || "No phone") + '</div>' +
+        '<span class="status ' + (d.barcode ? "s-ready" : "s-new") + '">' + (d.barcode ? "barcode added" : "new") + '</span></div>' +
+        '<div class="meta">Deliver to <b>' + esc(d.suburb || "?") + '</b>' + (when ? " · " + when : "") + '</div>' +
+        ((d.screenshots || (d.screenshot ? [d.screenshot] : [])).map(function(s){ return '<div style="margin-top:8px;border:1px solid var(--line);border-radius:10px;overflow:hidden"><img src="' + s + '" style="display:block;width:100%" /></div>'; }).join("")) +
+        (d.barcode ? '<div style="margin-top:8px;border:1px solid var(--line);border-radius:10px;overflow:hidden"><img src="' + d.barcode + '" style="display:block;width:100%" /></div>' : "") +
+        '<div class="acts">' +
+        '<button class="adv" data-use="' + d.id + '">Use → new order</button>' +
+        '<button class="del" data-dismiss="' + d.id + '">Dismiss</button>' +
+        '</div></div>';
+    }).join("");
+    w.querySelectorAll("[data-use]").forEach(function(b){
+      b.onclick = function(){
+        var d = inboxDocs.find(function(x){ return x.id === b.getAttribute("data-use"); });
+        importingDocId = d.id;
+        $("n-phone").value = d.phone || "";
+        $("n-address").value = "";
+        $("n-address").placeholder = d.suburb ? ("Street address — customer suburb: " + d.suburb) : "Delivery address";
+        var imgs = d.screenshots || (d.screenshot ? [d.screenshot] : []);
+        pendingBarcode = d.barcode || imgs[imgs.length - 1] || null;
+        if (pendingBarcode){ $("n-upzone").classList.add("has"); $("n-uptext").textContent = "Customer screenshot attached ✓"; }
+        document.querySelector('.tab[data-t="new"]').click();
+        toast("Read the screenshot → fill store, order no, name");
+      };
+    });
+    w.querySelectorAll("[data-dismiss]").forEach(function(b){
+      b.onclick = function(){
+        if (!confirm("Dismiss this inbox order?")) return;
+        db.collection("orders").doc(b.getAttribute("data-dismiss")).set({ imported: true }, { merge: true });
+      };
+    });
+  }
+  if (db){
+    db.collection("orders").onSnapshot(function(snap){
+      inboxDocs = [];
+      snap.forEach(function(doc){ var d = doc.data(); d.id = doc.id; inboxDocs.push(d); });
+      inboxDocs.sort(function(a,b){ return (b.createdAt||"").localeCompare(a.createdAt||""); });
+      renderInbox();
+    }, function(){});
+  }
+
+  /* new order */
+  $("n-save").onclick = function(){
+    var name = $("n-name").value.trim();
+    if (!name){ $("n-name").focus(); return; }
+    var o = {
+      id: "o_" + Date.now(),
+      at: new Date().toISOString(),
+      name: name, phone: $("n-phone").value.trim(),
+      store: $("n-store").value.trim(), orderNo: $("n-orderno").value.trim(),
+      address: $("n-address").value.trim(),
+      pay: $("n-pay").value.trim().replace(/^\$/,"") || "15",
+      fee: $("n-fee").value.trim().replace(/^\$/,"") || "0",
+      notes: $("n-notes").value.trim(),
+      barcode: pendingBarcode,
+      driverId: "",
+      status: pendingBarcode ? "ready" : "barcode"
+    };
+    orders.unshift(o); save(); pendingBarcode = null;
+    ["n-name","n-phone","n-store","n-orderno","n-address","n-pay","n-fee","n-notes"].forEach(function(i){ $(i).value=""; });
+    $("n-upzone").classList.remove("has");
+    $("n-uptext").textContent = "Attach barcode / confirmation screenshot (optional now)";
+    if (importingDocId && db){
+      db.collection("orders").doc(importingDocId).set({ imported: true, pipelineId: o.id }, { merge: true });
+      importingDocId = null;
+    }
+    renderAll();
+    document.querySelector('.tab[data-t="orders"]').click();
+    toast("Order added · " + (o.status==="ready" ? "ready to dispatch" : "awaiting barcode"));
+  };
+
+  /* drivers */
+  $("d-save").onclick = function(){
+    var name = $("d-name").value.trim();
+    if (!name){ $("d-name").focus(); return; }
+    drivers.push({ id: "d_" + Date.now(), name: name, suburb: $("d-suburb").value.trim(), phone: $("d-phone").value.trim() });
+    ["d-name","d-suburb","d-phone"].forEach(function(i){ $(i).value=""; });
+    save(); renderAll(); toast("Driver added");
+  };
+
+  function renderDrivers(){
+    var w = $("drivers-list");
+    if (!drivers.length){ w.innerHTML = '<div class="empty">No drivers yet — add your WhatsApp crew here so you can assign jobs.</div>'; return; }
+    w.innerHTML = drivers.map(function(d){
+      return '<div class="driver"><div class="av">' + esc((d.name||"?")[0].toUpperCase()) + '</div><div><div class="dn">' + esc(d.name) + '</div><div class="ds">' + esc(d.suburb||"—") + (d.phone ? " · " + esc(d.phone) : "") + '</div></div><button class="del" data-id="' + d.id + '">Remove</button></div>';
+    }).join("");
+    w.querySelectorAll(".del").forEach(function(b){
+      b.onclick = function(){
+        if (!confirm("Remove this driver?")) return;
+        drivers = drivers.filter(function(d){ return d.id !== b.getAttribute("data-id"); });
+        save(); renderAll();
+      };
+    });
+  }
+
+  function renderOrders(){
+    var w = $("orders-list");
+    if (!orders.length){ w.innerHTML = '<div class="empty">No orders yet.<br/>Add one from the "+ New order" tab — copy the details straight from your Formspree email or customer text.</div>'; return; }
+    w.innerHTML = orders.map(function(o){
+      var d = drivers.find(function(x){ return x.id === o.driverId; });
+      var cls = { new:"s-new", barcode:"s-barcode", ready:"s-ready", out:"s-out", done:"s-done" }[o.status];
+      var driverSel = '<select data-assign="' + o.id + '" style="margin:0;padding:7px 9px;font-size:12px;width:auto;border-radius:9px">' +
+        '<option value="">— assign driver —</option>' +
+        drivers.map(function(x){ return '<option value="' + x.id + '"' + (x.id===o.driverId?" selected":"") + '>' + esc(x.name) + ' (' + esc(x.suburb||"?") + ')</option>'; }).join("") +
+        '</select>';
+      return '<div class="order">' +
+        '<div class="top"><div class="who">' + esc(o.name) + '</div><span class="status ' + cls + '">' + SLABEL[o.status] + '</span></div>' +
+        '<div class="meta"><b>' + esc(o.store||"Store TBC") + '</b>' + (o.orderNo ? " · #" + esc(o.orderNo) : "") + (o.barcode ? " · barcode ✓" : " · no barcode yet") + '<br/>' +
+        (o.address ? "→ " + esc(o.address) + "<br/>" : "") +
+        "Driver pay $" + esc(o.pay) + (o.fee && o.fee!=="0" ? " · customer fee $" + esc(o.fee) : " · free trial") +
+        (d ? " · <b>" + esc(d.name) + "</b>" : "") + '</div>' +
+        '<div class="acts">' +
+          (o.status!=="done" ? '<button class="adv" data-adv="' + o.id + '">' + SNEXTLABEL[o.status] + '</button>' : "") +
+          driverSel +
+          '<button class="jc" data-jc="' + o.id + '">Job card</button>' +
+          (db && o.status!=="done" ? '<button class="adv" data-pub="' + o.id + '" style="border-color:#10b981;color:#0e7a58;background:#e7f9f1">' + (o.published ? "Update live job" : "Publish live") + '</button>' : "") +
+          (o.liveDriver ? '<button disabled style="border-color:#ede9fe;color:#6d28d9;background:#ede9fe">Claimed: ' + esc(o.liveDriver) + '</button>' : "") +
+          (!o.barcode ? '<button data-bar="' + o.id + '">+ barcode</button>' : "") +
+          '<button class="del" data-del="' + o.id + '">Delete</button>' +
+        '</div>' +
+        '<input type="file" accept="image/*" data-barfile="' + o.id + '" style="display:none" />' +
+      '</div>';
+    }).join("");
+
+    w.querySelectorAll("[data-adv]").forEach(function(b){
+      b.onclick = function(){
+        var o = orders.find(function(x){ return x.id === b.getAttribute("data-adv"); });
+        o.status = SNEXT[o.status]; save(); renderAll();
+        toast(SLABEL[o.status]);
+      };
+    });
+    w.querySelectorAll("[data-assign]").forEach(function(s){
+      s.onchange = function(){
+        var o = orders.find(function(x){ return x.id === s.getAttribute("data-assign"); });
+        o.driverId = s.value; save(); renderAll();
+        if (s.value) toast("Assigned to " + drivers.find(function(x){return x.id===s.value;}).name);
+      };
+    });
+    w.querySelectorAll("[data-del]").forEach(function(b){
+      b.onclick = function(){
+        if (!confirm("Delete this order?")) return;
+        orders = orders.filter(function(x){ return x.id !== b.getAttribute("data-del"); });
+        save(); renderAll();
+      };
+    });
+    w.querySelectorAll("[data-bar]").forEach(function(b){
+      b.onclick = function(){ w.querySelector('[data-barfile="' + b.getAttribute("data-bar") + '"]').click(); };
+    });
+    w.querySelectorAll("[data-barfile]").forEach(function(inp){
+      inp.addEventListener("change", function(e){
+        var f = e.target.files && e.target.files[0]; if (!f) return;
+        var o = orders.find(function(x){ return x.id === inp.getAttribute("data-barfile"); });
+        var r = new FileReader();
+        r.onload = function(){ compress(r.result, function(out){
+          o.barcode = out;
+          if (o.status === "barcode" || o.status === "new") o.status = "ready";
+          save(); renderAll(); toast("Barcode attached · ready to dispatch");
+        }); };
+        r.readAsDataURL(f);
+      });
+    });
+    w.querySelectorAll("[data-jc]").forEach(function(b){
+      b.onclick = function(){ openJobCard(b.getAttribute("data-jc")); };
+    });
+    w.querySelectorAll("[data-pub]").forEach(function(b){
+      b.onclick = function(){
+        var o = orders.find(function(x){ return x.id === b.getAttribute("data-pub"); });
+        var payload = {
+          store: o.store || "", orderNo: o.orderNo || "", customer: o.name || "",
+          address: o.address || "", notes: o.notes || "", pay: o.pay || "15",
+          pickupArea: o.store || "", dropArea: (o.address||"").split(",").slice(-2).join(",").trim(),
+          window: "", barcode: o.barcode || null,
+          status: o.liveDriver ? "claimed" : "open",
+          createdAt: o.at || new Date().toISOString(), publishedAt: new Date().toISOString()
+        };
+        db.collection("jobs").doc(o.id).set(payload, { merge: true }).then(function(){
+          o.published = true; save(); renderAll();
+          toast("Live on the driver board");
+        }).catch(function(){ toast("Couldn't publish — check connection/config"); });
+      };
+    });
+  }
+
+  /* live claim/delivery sync from the driver board */
+  if (db) {
+    db.collection("jobs").onSnapshot(function(snap){
+      var changed = false;
+      snap.forEach(function(doc){
+        var j = doc.data();
+        var o = orders.find(function(x){ return x.id === doc.id; });
+        if (!o) return;
+        if (j.driverName && o.liveDriver !== j.driverName){ o.liveDriver = j.driverName; o.published = true; changed = true; }
+        if (j.status === "claimed" && (o.status === "ready" || o.status === "new" || o.status === "barcode")){ o.status = "out"; changed = true; }
+        if (j.status === "delivered" && o.status !== "done"){ o.status = "done"; changed = true; }
+      });
+      if (changed){ save(); renderAll(); toast("Live update from driver board"); }
+    }, function(){});
+  }
+
+  function openJobCard(id){
+    var o = orders.find(function(x){ return x.id === id; });
+    var d = drivers.find(function(x){ return x.id === o.driverId; });
+    var driverName = d ? d.name : "the bearer";
+    var dateStr = new Date().toLocaleDateString("en-AU", { day:"numeric", month:"long", year:"numeric" });
+    var firstWord = (o.store||"Store").split(/[\s,]/)[0];
+    var LOGO = '<svg width="20" height="20" viewBox="0 0 400 400"><defs><linearGradient id="lgm" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#7c73f0"/><stop offset="100%" stop-color="#5e53f6"/></linearGradient></defs><rect x="40" y="40" width="320" height="320" rx="92" fill="url(#lgm)"/><g fill="none" stroke="#fff" stroke-width="25" stroke-linecap="round" stroke-linejoin="round"><path d="M196 132L116 175"/><path d="M196 132L234 152"/><path d="M116 175L196 217"/><path d="M116 175L116 257"/><path d="M116 257L196 299"/><path d="M196 217L196 299"/><path d="M196 217L282 153"/><path d="M252 153L282 153L282 184"/><path d="M276 200L276 257L196 299"/></g></svg>';
+    $("jc-card").innerHTML =
+      '<div class="jc-head"><div class="jc-brand">' + LOGO + '<b>Pakd</b><span class="tag">DELIVERY JOB</span></div>' +
+      '<div class="jc-title">' + esc(firstWord) + ' pickup → delivery</div>' +
+      '<div class="jc-pay">$' + esc(o.pay) + ' · paid on completion</div></div>' +
+      '<div class="jc-sec"><div class="jc-k">Pick up</div><div class="jc-v">' + esc(o.store||"—") + '</div>' +
+      '<div class="jc-s">' + (o.orderNo ? "Order <b>#" + esc(o.orderNo) + "</b> · " : "") + 'placed by <b>' + esc(o.name) + '</b></div>' +
+      (o.barcode ? '<div class="jc-bar"><img src="' + o.barcode + '" alt="barcode" /><div class="cap">SHOW THIS AT THE COUNTER — STAFF SCAN IT LIKE ANY COLLECTION</div></div>' : '<div class="jc-s" style="margin-top:8px;color:#b45309"><b>Barcode pending</b> — do not dispatch until attached.</div>') +
+      '<div class="jc-auth"><div class="ttl">Collection authority</div>I, <b>' + esc(o.name) + '</b>, authorise <b>' + esc(driverName) + '</b> — a verified Pakd driver — to collect ' + (o.orderNo ? "order <b>#" + esc(o.orderNo) + "</b>" : "my order") + ' from <b>' + esc(o.store||"the store") + '</b> on my behalf. The collector is my authorised representative for this collection only. Dated <b>' + dateStr + '</b>.</div></div>' +
+      '<div class="jc-sec"><div class="jc-k">Deliver to</div><div class="jc-v">' + esc(o.address||"—") + '</div>' +
+      '<div class="jc-s">For <b>' + esc(o.name) + '</b>' + (o.phone ? " · " + esc(o.phone) : "") + '</div>' +
+      (o.notes ? '<div class="jc-s" style="margin-top:5px">Note: ' + esc(o.notes) + '</div>' : "") + '</div>' +
+      '<div class="jc-sec"><div class="jc-k">Steps</div><ul class="jc-steps">' +
+      '<li><span class="n">1</span>Head to the store — bring your photo ID just in case.</li>' +
+      '<li><span class="n">2</span>Show the barcode. If asked: the authority above — it names you.</li>' +
+      '<li><span class="n">3</span>Photo the sealed bag before leaving.</li>' +
+      '<li><span class="n">4</span>Deliver — photo at the door.</li>' +
+      '<li><span class="n">5</span>Send both photos back — paid straight away.</li></ul></div>' +
+      '<div class="jc-foot">Any issue — don\'t argue it, call me and we sort it live. Thanks for being a founding driver.</div>';
+    $("jc-modal").classList.add("open");
+  }
+  $("jc-close").onclick = function(){ $("jc-modal").classList.remove("open"); };
+
+  function renderStats(){
+    $("st-active").textContent = orders.filter(function(o){ return o.status!=="done"; }).length;
+    $("st-waiting").textContent = orders.filter(function(o){ return o.status==="barcode"||o.status==="new"; }).length;
+    $("st-done").textContent = orders.filter(function(o){ return o.status==="done"; }).length;
+    $("st-drivers").textContent = drivers.length;
+  }
+  function renderAll(){ renderStats(); renderOrders(); renderDrivers(); }
+  renderAll();
+})();
+</script>
+</body>
+</html>

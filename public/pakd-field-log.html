@@ -1,0 +1,658 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-title" content="Pakd Field Log" />
+<meta name="theme-color" content="#0b1220" />
+<title>Pakd · Field Log</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Sora:wght@500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --canvas:#0b1220;--canvas2:#0f1a2e;--bg:#f5f6fb;--card:#ffffff;
+    --ink:#191d21;--sub:#6b7280;--muted:#9aa1ad;--line:#eceef3;--lineHi:#e2e5ed;
+    --indigo:#6366f1;--indigoDeep:#5e53f6;--indigoLite:#7c73f0;--indigoSoft:#eef0fe;
+    --emerald:#10b981;--emeraldSoft:#e7f9f1;
+    --amber:#f59e0b;--amberSoft:#fef6e7;
+    --red:#ef4444;--redSoft:#fdecec;
+    --sky:#0ea5e9;--skySoft:#e6f6fd;
+    --fb:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,sans-serif;
+    --fh:'Sora',-apple-system,BlinkMacSystemFont,sans-serif;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0;font-family:var(--fb);background:var(--bg);color:var(--ink);overscroll-behavior-y:contain}
+  body{padding-bottom:env(safe-area-inset-bottom);min-height:100vh}
+
+  .header{background:linear-gradient(180deg,var(--canvas) 0%,var(--canvas2) 100%);padding:18px 18px 22px;padding-top:max(18px,env(safe-area-inset-top));color:#fff;position:relative;overflow:hidden}
+  .header::before{content:"";position:absolute;top:-80px;right:-60px;width:280px;height:280px;background:radial-gradient(circle,rgba(124,115,240,0.35),transparent 65%);border-radius:50%}
+  .brand{display:flex;align-items:center;gap:10px;margin-bottom:14px;position:relative}
+  .brand svg{display:block;flex-shrink:0}
+  .brand .name{font-weight:800;font-size:20px;letter-spacing:-0.03em}
+  .brand .badge{font-size:11px;font-weight:600;color:#c7c9ff;border:1px solid rgba(99,102,241,0.4);border-radius:20px;padding:3px 10px;background:rgba(99,102,241,0.12)}
+  .h1{font-family:var(--fh);font-size:24px;font-weight:700;letter-spacing:-0.025em;margin:0 0 4px;position:relative}
+  .h2{font-size:13px;color:#9aa6bd;margin:0;position:relative;line-height:1.5}
+
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:16px;background:var(--card);border-bottom:1px solid var(--line)}
+  .stat{padding:10px 6px;text-align:center;border-radius:10px;background:var(--bg)}
+  .stat .n{font-family:var(--fh);font-weight:700;font-size:20px;letter-spacing:-0.02em;line-height:1}
+  .stat .l{font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-top:4px}
+  .stat.t1 .n{color:var(--indigo)} .stat.y .n{color:var(--emerald)} .stat.c .n{color:var(--amber)} .stat.n .n{color:var(--red)}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;margin:14px;box-shadow:0 1px 2px rgba(16,24,40,0.04)}
+  .label{font-weight:700;font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+  .label .req{color:var(--red);font-weight:800}
+
+  input[type=text],input[type=url],textarea,select{width:100%;padding:13px 14px;border:1.5px solid var(--line);border-radius:11px;font-family:var(--fb);font-size:15px;color:var(--ink);background:var(--card);outline:none;-webkit-appearance:none;appearance:none}
+  textarea{resize:none;min-height:70px;line-height:1.45}
+  input:focus,textarea:focus,select:focus{border-color:var(--indigo);box-shadow:0 0 0 3px var(--indigoSoft)}
+  .field{margin-bottom:14px}
+  .field:last-child{margin-bottom:0}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+  /* SOURCE TOGGLE */
+  .source{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .source button{background:var(--card);border:1.5px solid var(--line);border-radius:12px;padding:12px 10px;font-family:var(--fb);font-weight:600;font-size:14px;color:var(--sub);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;transition:all .12s}
+  .source button.on{border-color:var(--indigo);background:var(--indigoSoft);color:var(--indigoDeep)}
+
+  .verdict{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .verdict button{background:var(--card);border:1.5px solid var(--line);border-radius:12px;padding:12px 10px;font-family:var(--fb);font-weight:600;font-size:14px;color:var(--ink);cursor:pointer;display:flex;align-items:center;gap:8px;text-align:left;transition:all .12s}
+  .verdict button .dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+  .verdict button[data-v=yes] .dot{background:var(--emerald)}
+  .verdict button[data-v=cond] .dot{background:var(--amber)}
+  .verdict button[data-v=no] .dot{background:var(--red)}
+  .verdict button[data-v=unc] .dot{background:var(--sub)}
+  .verdict button.on[data-v=yes]{border-color:var(--emerald);background:var(--emeraldSoft)}
+  .verdict button.on[data-v=cond]{border-color:var(--amber);background:var(--amberSoft)}
+  .verdict button.on[data-v=no]{border-color:var(--red);background:var(--redSoft)}
+  .verdict button.on[data-v=unc]{border-color:var(--sub);background:#f0f1f4}
+
+  .chips{display:flex;gap:6px;flex-wrap:wrap}
+  .chips button{background:var(--card);border:1.5px solid var(--line);border-radius:20px;padding:8px 14px;font-family:var(--fb);font-weight:600;font-size:13px;color:var(--sub);cursor:pointer}
+  .chips button.on{border-color:var(--indigo);background:var(--indigoSoft);color:var(--indigoDeep)}
+  .hint{font-size:11.5px;color:var(--muted);margin-top:7px;line-height:1.5}
+
+  .stars{display:flex;gap:4px}
+  .stars button{background:none;border:none;padding:4px;cursor:pointer;font-size:24px;line-height:1;color:var(--lineHi);transition:color .12s}
+  .stars button.on{color:var(--amber)}
+
+  .save{width:100%;background:var(--indigo);color:#fff;border:none;border-radius:14px;padding:15px;font-family:var(--fb);font-weight:700;font-size:15.5px;cursor:pointer;box-shadow:0 8px 22px rgba(99,102,241,0.3);display:flex;align-items:center;justify-content:center;gap:8px;margin-top:6px}
+
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(80px);background:var(--ink);color:#fff;padding:13px 18px;border-radius:30px;font-weight:600;font-size:13.5px;box-shadow:0 12px 30px rgba(0,0,0,0.25);transition:transform .3s ease;z-index:50;display:flex;align-items:center;gap:8px;pointer-events:none}
+  .toast.show{transform:translateX(-50%) translateY(0)}
+  .toast .check{color:var(--emerald)}
+
+  .log-head{padding:8px 16px 12px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .log-head h3{font-family:var(--fh);font-size:17px;font-weight:600;margin:0;letter-spacing:-0.01em}
+  .log-head .count{font-size:12px;color:var(--muted);font-weight:600}
+
+  .filter{display:flex;gap:6px;padding:0 16px 12px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .filter::-webkit-scrollbar{display:none}
+  .filter button{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:7px 13px;font-weight:600;font-size:12.5px;color:var(--sub);cursor:pointer;white-space:nowrap;flex-shrink:0;font-family:var(--fb)}
+  .filter button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+
+  .entries{padding:0 14px 16px;display:flex;flex-direction:column;gap:10px}
+  .entry{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px}
+  .entry .top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:6px}
+  .entry .name{font-weight:700;font-size:15px;color:var(--ink);line-height:1.3;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+  .entry .sub{font-size:12.5px;color:var(--sub);margin-top:2px}
+  .pill{font-size:10.5px;font-weight:700;padding:4px 10px;border-radius:20px;white-space:nowrap;flex-shrink:0;letter-spacing:0.02em;text-transform:uppercase}
+  .pill.yes{background:var(--emeraldSoft);color:var(--emerald)}
+  .pill.cond{background:var(--amberSoft);color:#b76e00}
+  .pill.no{background:var(--redSoft);color:var(--red)}
+  .pill.unc{background:#f0f1f4;color:var(--sub)}
+  .tier1{font-size:9.5px;font-weight:800;letter-spacing:0.04em;color:var(--indigoDeep);background:var(--indigoSoft);border:1px solid rgba(99,102,241,0.3);border-radius:6px;padding:2px 7px;text-transform:uppercase}
+
+  .entry .meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;font-size:11.5px;color:var(--muted);font-weight:500}
+  .entry .meta span{display:inline-flex;align-items:center;gap:4px}
+  .entry .meta .src{font-weight:700}
+  .entry .meta .src.online{color:var(--sky)}
+  .entry .meta .src.visit{color:var(--indigo)}
+  .entry .meta .stars-small{color:var(--amber);font-size:12px;letter-spacing:1px}
+  .entry .note{font-size:13px;color:var(--ink);margin-top:8px;padding-top:8px;border-top:1px solid var(--line);line-height:1.45}
+  .entry .note a{color:var(--indigo);word-break:break-all}
+  .entry .actions{margin-top:8px;display:flex;gap:6px;justify-content:flex-end}
+  .entry .actions button{background:none;border:none;color:var(--muted);font-family:var(--fb);font-size:12px;font-weight:600;cursor:pointer;padding:4px 8px;border-radius:6px}
+  .entry .actions .edit{color:var(--indigoDeep)}
+  .entry .actions .del{color:var(--red)}
+
+  .empty{text-align:center;padding:30px 20px;color:var(--muted);font-size:13.5px;background:var(--card);border:1px dashed var(--lineHi);border-radius:14px;margin:0 14px;line-height:1.5}
+
+  .footer{padding:14px 14px 24px;display:flex;gap:10px}
+  .footer button{flex:1;background:var(--card);border:1.5px solid var(--line);border-radius:12px;padding:13px;font-family:var(--fb);font-weight:600;font-size:13.5px;color:var(--ink);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px}
+  .footer button.clear{color:var(--red);border-color:var(--redSoft)}
+
+  details.help{background:var(--indigoSoft);border:1px solid rgba(99,102,241,0.2);border-radius:12px;padding:0;margin:14px}
+  details.help summary{padding:12px 14px;cursor:pointer;font-weight:600;font-size:13.5px;color:var(--indigoDeep);list-style:none;display:flex;align-items:center;gap:8px}
+  details.help summary::-webkit-details-marker{display:none}
+  details.help summary::after{content:"+";margin-left:auto;font-size:18px;font-weight:700;color:var(--indigo);transition:transform .15s}
+  details.help[open] summary::after{transform:rotate(45deg)}
+  details.help .body{padding:0 14px 14px;font-size:13px;color:#4b4f86;line-height:1.6}
+  details.help .body ul{margin:6px 0 0;padding-left:18px}
+  details.help .body li{margin-bottom:4px}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="brand">
+    <svg width="26" height="26" viewBox="0 0 400 400"><defs><linearGradient id="lg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#7c73f0"/><stop offset="100%" stop-color="#5e53f6"/></linearGradient></defs><rect x="40" y="40" width="320" height="320" rx="92" fill="url(#lg)"/><g fill="none" stroke="#fff" stroke-width="25" stroke-linecap="round" stroke-linejoin="round"><path d="M196 132L116 175"/><path d="M196 132L234 152"/><path d="M116 175L196 217"/><path d="M116 175L116 257"/><path d="M116 257L196 299"/><path d="M196 217L196 299"/><path d="M196 217L282 153"/><path d="M252 153L282 153L282 184"/><path d="M276 200L276 257L196 299"/></g></svg>
+    <span class="name">Pakd</span>
+    <span class="badge">Field log</span>
+  </div>
+  <h1 class="h1">Store validation log</h1>
+  <p class="h2">Two kinds of evidence, one launch list: stores you've reviewed online and stores you've walked into. Tier 1 = allowed + collector can be named after ordering.</p>
+</div>
+
+<div class="stats">
+  <div class="stat"><div class="n" id="ct-total">0</div><div class="l">Logged</div></div>
+  <div class="stat t1"><div class="n" id="ct-t1">0</div><div class="l">Tier 1</div></div>
+  <div class="stat y"><div class="n" id="ct-yes">0</div><div class="l">Yes</div></div>
+  <div class="stat c"><div class="n" id="ct-cond">0</div><div class="l">Cond.</div></div>
+</div>
+
+<details class="help">
+  <summary>How to use this</summary>
+  <div class="body">
+    <strong>In person:</strong> walk in, find a staff member, ask: <em>"If I ordered something here and authorised someone else to pick it up on my behalf — with my order number and a written authority — would your policy allow that?"</em> Log the answer.
+    <br><br>
+    <strong>Online:</strong> search "[store name] click and collect someone else" — check their FAQ or help centre, log what their published policy says, and paste the URL.
+    <br><br>
+    <strong>The timing question matters most:</strong>
+    <ul>
+      <li><strong>Anytime / barcode</strong> — collector named after ordering, or just shows the collection barcode → perfect for Pakd</li>
+      <li><strong>After order</strong> — phone the store / edit the order to nominate → works for Pakd</li>
+      <li><strong>Checkout only</strong> — nominee locked when ordering, can't change → parked for now</li>
+    </ul>
+  </div>
+</details>
+
+<div class="card" id="form-card">
+  <div class="field">
+    <div class="label">How did you check? <span class="req">*</span></div>
+    <div class="source" id="f-source">
+      <button data-s="visit" type="button" class="on">🏬 Visited in person</button>
+      <button data-s="online" type="button">🔎 Reviewed online</button>
+    </div>
+  </div>
+
+  <div class="field">
+    <div class="label">Store name <span class="req">*</span></div>
+    <input type="text" id="f-name" placeholder="e.g. Foot Locker, Pitt St" autocomplete="off" />
+  </div>
+
+  <div class="row">
+    <div class="field">
+      <div class="label">Suburb / area</div>
+      <input type="text" id="f-suburb" placeholder="e.g. CBD (or 'chain-wide')" autocomplete="off" />
+    </div>
+    <div class="field">
+      <div class="label">Store type</div>
+      <select id="f-type">
+        <option value="">Pick one</option>
+        <option value="Chain">Chain</option>
+        <option value="Independent">Independent</option>
+        <option value="Department store">Department store</option>
+        <option value="Other">Other</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="field">
+    <div class="label">Do they allow someone else to collect? <span class="req">*</span></div>
+    <div class="verdict" id="f-verdict">
+      <button data-v="yes" type="button"><span class="dot"></span>Yes, allowed</button>
+      <button data-v="cond" type="button"><span class="dot"></span>Yes, with conditions</button>
+      <button data-v="no" type="button"><span class="dot"></span>No, not permitted</button>
+      <button data-v="unc" type="button"><span class="dot"></span>Unclear</button>
+    </div>
+  </div>
+
+  <div class="field">
+    <div class="label">When can the collector be named?</div>
+    <div class="chips" id="f-timing">
+      <button type="button" data-t="anytime">Anytime / barcode</button>
+      <button type="button" data-t="after">After order</button>
+      <button type="button" data-t="checkout">Checkout only</button>
+      <button type="button" data-t="none">No formal system</button>
+      <button type="button" data-t="unknown">Unknown</button>
+    </div>
+    <div class="hint">This decides the tier. Anytime or after-order → Pakd works natively (Tier 1). Checkout-only → parked. No formal system → Collection Authority route.</div>
+  </div>
+
+  <div class="field" id="conditions-field" style="display:none">
+    <div class="label">What do they require?</div>
+    <textarea id="f-conditions" placeholder="e.g. Photo ID matching the nominee + order confirmation email"></textarea>
+  </div>
+
+  <div class="field" id="url-field" style="display:none">
+    <div class="label">Policy URL</div>
+    <input type="url" id="f-url" placeholder="Paste the page where the policy is stated" autocomplete="off" />
+  </div>
+
+  <div class="field" id="demand-field">
+    <div class="label">Customer demand · gut feel</div>
+    <div class="stars" id="f-demand">
+      <button type="button" data-s="1">★</button>
+      <button type="button" data-s="2">★</button>
+      <button type="button" data-s="3">★</button>
+      <button type="button" data-s="4">★</button>
+      <button type="button" data-s="5">★</button>
+    </div>
+  </div>
+
+  <div class="field">
+    <div class="label">Notes</div>
+    <textarea id="f-notes" placeholder="Staff name, exact policy wording, follow-up ideas…"></textarea>
+  </div>
+
+  <button class="save" id="save-btn">Save entry <span>→</span></button>
+  <button id="cancel-edit" style="display:none;width:100%;background:none;border:1.5px solid var(--line);border-radius:14px;padding:12px;font-family:var(--fb);font-weight:600;font-size:14px;color:var(--sub);cursor:pointer;margin-top:8px">Cancel editing</button>
+</div>
+
+<div class="log-head">
+  <h3>Logged stores</h3>
+  <span class="count" id="log-count">0 entries</span>
+</div>
+<div class="filter" id="filter">
+  <button data-f="all" class="on">All</button>
+  <button data-f="tier1">Tier 1</button>
+  <button data-f="yes">Yes</button>
+  <button data-f="cond">Conditional</button>
+  <button data-f="no">No</button>
+  <button data-f="unc">Unclear</button>
+  <button data-f="visit">Visited</button>
+  <button data-f="online">Online</button>
+</div>
+<div class="entries" id="entries"></div>
+
+<div class="footer">
+  <button id="export-btn">⤓ Export CSV</button>
+  <button id="clear-btn" class="clear">Clear all</button>
+</div>
+
+<div class="toast" id="toast"><span class="check">✓</span><span id="toast-msg">Saved</span></div>
+
+<script>
+(function(){
+  var KEY = "pakd-fieldlog-v1";
+  var SEED_KEY = "pakd-fieldlog-seeded-v3";
+  var entries = [];
+  try { entries = JSON.parse(localStorage.getItem(KEY) || "[]"); } catch(e) { entries = []; }
+
+  /* one-time seed: desk research, June 2026 — published policies where found, 'unc' = validate in store */
+  if (!localStorage.getItem(SEED_KEY)) {
+    var now = Date.now();
+    var seed = [
+      /* ---- documented YES / strong for Pakd ---- */
+      { name:"Kmart", type:"Chain", verdict:"yes", timing:"anytime", conditions:"Share the collection barcode — app has a 'let someone else collect' option. Collector brings the barcode or collection email/SMS to the service counter.", url:"https://www.kmart.com.au/faq/click-and-collect/", notes:"Best-in-class for Pakd. People already pay Airtasker workers to do exactly this." },
+      { name:"Myer", type:"Department store", verdict:"yes", timing:"anytime", conditions:"Nominate name + email before checkout, OR a courier shows the click & collect barcode. Policy explicitly mentions courier apps like Uber.", url:"https://www.myer.com.au/content/faq", notes:"Policy already anticipates third-party couriers — strongest precedent for Pakd. Orders held 21 days." },
+      { name:"Coles", type:"Chain", verdict:"yes", timing:"anytime", conditions:"Forward the 'order ready' message to the collector — they follow the collection instructions. Age-restricted items: only the customer can collect.", url:"https://www.coles.com.au/help/click-and-collect/someone-else-picking-up-your-order", notes:"Groceries. Clean barcode-style flow; alcohol/tobacco excluded." },
+      { name:"IKEA", type:"Chain", verdict:"yes", timing:"anytime", conditions:"Nominate at checkout (name + number) OR simply forward the order confirmation email — collector shows it plus any ID (e.g. driver's licence).", url:"https://www.ikea.com/au/en/customer-service/knowledge/", notes:"Email-forward flow works after ordering. Bulky items = vehicle consideration for drivers." },
+      { name:"Target", type:"Chain", verdict:"yes", timing:"after", conditions:"Nominate a representative — 'provide evidence that you've given them permission'; staff may phone the customer to authorise. Collector needs photo ID + proof of purchase, signs on collection.", url:"https://www.target.com.au/help/faqs/delivery", notes:"Their policy is literally Pakd's Collection Authority model — written permission evidence. Parcel-locker orders use a one-time PIN/QR." },
+      { name:"Apple", type:"Chain", verdict:"cond", timing:"after", conditions:"Designate a third party (name + email) via order management. Gov-issued photo ID + order number at pickup. Some products/payment methods excluded from third-party pickup.", url:"https://www.apple.com/au/shop/help/viewing_changing_orders", notes:"Better than expected. Driver's legal name must match their ID." },
+      { name:"David Jones", type:"Department store", verdict:"yes", timing:"checkout", conditions:"Nominate someone during checkout. Collector brings their own valid photo ID + the order number.", url:"https://www.davidjones.com/click-and-collect", notes:"Orders can be modified any time via the store's Customer Service Centre — worth testing whether nominee can be added after ordering. Held 14 days." },
+      { name:"EB Games", type:"Chain", verdict:"cond", timing:"after", conditions:"Call the pickup store after ordering and give the nominee's name. Photo ID + order confirmation at counter.", url:"https://support.ebgames.com.au/hc/en-us/articles/4656211073551", notes:"Phone-the-store flow. Workable for Pakd if customer (or Pakd ops) makes the call." },
+      { name:"PETstock", type:"Chain", verdict:"cond", timing:"after", conditions:"Nominated name on confirmation email must match photo ID. Collector signs. Let the store team know in advance.", url:"https://support.petstock.com.au/hc/en-us/articles/360033618611", notes:"" },
+      { name:"Woolworths", type:"Chain", verdict:"cond", timing:"anytime", conditions:"Contactless Pick up — collector reads out the order number to the team member; no signature. Alcohol/age-restricted excluded.", url:"https://www.woolworths.com.au/shop/services/pickup/pickup-faqs", notes:"Policy doesn't explicitly address third parties but flow is order-number based. Validate in store." },
+      /* ---- documented but parked (checkout-locked) ---- */
+      { name:"Anaconda", type:"Chain", verdict:"yes", timing:"checkout", conditions:"'Who is Collecting' field at online checkout — name + mobile of the collector.", url:"https://help.anacondastores.com/hc/en-au/articles/10466376065039", notes:"Allowed, but nominee set when ordering — Pakd-first flow only. Parked for MVP." },
+      { name:"Zing Pop Culture", type:"Chain", verdict:"cond", timing:"checkout", conditions:"Nominate representative at the time the order is placed. Photo ID + order confirmation at collection.", url:"https://support.zingpopculture.com.au/hc/en-us/articles/4661174949775", notes:"Same group as EB Games but stricter timing. Parked." },
+      { name:"JB Hi-Fi", type:"Chain", verdict:"cond", timing:"checkout", conditions:"Nominate at checkout ONLY — the nominated person cannot be changed afterwards. ID + proof of purchase required.", url:"https://www.jbhifi.com.au/pages/help-and-support/can-someone-else-pick-up-my-click-and-collect-order", notes:"Locked-at-checkout policy. Parked for MVP — future partnership conversation." },
+      /* ---- legal NO: age-restricted ---- */
+      { name:"Dan Murphy's", type:"Chain", verdict:"no", timing:"none", conditions:"Alcohol. It is against the law to obtain alcohol on behalf of a minor; Endeavour checks ID of anyone appearing under 25 and reserves the right to refuse pickup.", url:"https://wowdm.zendesk.com/hc/en-us/articles/360000043636", notes:"Category exclusion for Pakd MVP — liquor licensing risk isn't worth it." },
+      { name:"BWS", type:"Chain", verdict:"no", timing:"none", conditions:"Alcohol — same Endeavour Group restrictions as Dan Murphy's.", url:"", notes:"Category exclusion." },
+      { name:"Liquorland / First Choice", type:"Chain", verdict:"no", timing:"none", conditions:"Alcohol — Coles Liquor; age-restricted collection rules.", url:"", notes:"Category exclusion." },
+      { name:"Chemist Warehouse", type:"Chain", verdict:"unc", timing:"unknown", conditions:"Prescriptions are legally restricted (patient or agent rules vary by state). Front-of-store retail items may be collectable — no published third-party policy found.", url:"", notes:"Validate retail-only collection in store. Never carry prescriptions at MVP." },
+      { name:"Priceline", type:"Chain", verdict:"unc", timing:"unknown", conditions:"Pharmacy lines restricted; beauty/retail lines unconfirmed.", url:"", notes:"Validate in store — retail items only." },
+      /* ---- unclear: validate in store ---- */
+      { name:"Bunnings", type:"Chain", verdict:"unc", timing:"unknown", conditions:"AU policy says bring confirmation email + ID; doesn't address third parties. NZ trade site explicitly allows someone else to collect.", url:"https://www.bunnings.com.au/services/in-store/click-collect", notes:"Validate in store — AU practice likely allows with email + ID but unconfirmed." },
+      { name:"Officeworks", type:"Chain", verdict:"unc", timing:"unknown", conditions:"No published third-party collection policy found. Anecdotes suggest strict fraud screening on collections.", url:"https://www.officeworks.com.au/help-centre/online-orders", notes:"Validate in store." },
+      { name:"Big W", type:"Chain", verdict:"unc", timing:"unknown", conditions:"No published third-party policy found.", url:"", notes:"Validate in store. High click & collect volume — worth confirming early." },
+      { name:"Harvey Norman", type:"Chain", verdict:"unc", timing:"unknown", conditions:"No published third-party policy found. Franchise-style stores may vary.", url:"", notes:"Validate in store — electronics value means likely ID-strict." },
+      { name:"The Good Guys", type:"Chain", verdict:"unc", timing:"unknown", conditions:"No published policy found. Owned by JB Hi-Fi — may mirror JB's locked-at-checkout rule.", url:"https://www.thegoodguys.com.au/help-centre/delivery-collection/click-collect", notes:"Validate in store." },
+      { name:"Rebel", type:"Chain", verdict:"unc", timing:"unknown", conditions:"No published third-party policy found (Super Retail Group).", url:"", notes:"Validate in store. High sneaker/apparel demand — priority check." },
+      { name:"Supercheap Auto", type:"Chain", verdict:"unc", timing:"unknown", conditions:"No published third-party policy found (Super Retail Group).", url:"", notes:"Validate in store." },
+      { name:"BCF", type:"Chain", verdict:"unc", timing:"unknown", conditions:"No published third-party policy found (Super Retail Group). Sister brand Anaconda nominates at checkout.", url:"", notes:"Validate in store." },
+      { name:"Macpac", type:"Chain", verdict:"unc", timing:"unknown", conditions:"No published third-party policy found (Super Retail Group).", url:"", notes:"Validate in store." },
+      { name:"Mecca", type:"Chain", verdict:"unc", timing:"unknown", conditions:"No published third-party policy found.", url:"", notes:"Validate in store. Strong gift demand — priority check for Pakd's customer base." },
+      { name:"Sephora", type:"Chain", verdict:"unc", timing:"unknown", conditions:"No published third-party policy found.", url:"", notes:"Validate in store." },
+      { name:"Foot Locker", type:"Chain", verdict:"unc", timing:"unknown", conditions:"No published third-party policy found.", url:"", notes:"Validate in store. Sneaker releases = exactly Pakd's demo use case — priority check." },
+      { name:"Platypus", type:"Chain", verdict:"unc", timing:"unknown", conditions:"No published third-party policy found (Accent Group).", url:"", notes:"Validate in store." },
+      { name:"Hype DC", type:"Chain", verdict:"unc", timing:"unknown", conditions:"No published third-party policy found (Accent Group).", url:"", notes:"Validate in store." },
+      { name:"The Athlete's Foot", type:"Chain", verdict:"unc", timing:"unknown", conditions:"No published third-party policy found (Accent Group).", url:"", notes:"Validate in store." },
+      { name:"Nike", type:"Chain", verdict:"unc", timing:"unknown", conditions:"No published AU third-party policy found.", url:"", notes:"Validate in store." },
+      { name:"adidas", type:"Chain", verdict:"unc", timing:"unknown", conditions:"No published AU third-party policy found.", url:"", notes:"Validate in store." },
+      { name:"Cotton On", type:"Chain", verdict:"unc", timing:"unknown", conditions:"No published third-party policy found.", url:"", notes:"Validate in store. Huge store network — high coverage value if yes." },
+      { name:"Uniqlo", type:"Chain", verdict:"unc", timing:"unknown", conditions:"No published AU third-party policy found.", url:"", notes:"Validate in store." },
+      { name:"H&M", type:"Chain", verdict:"unc", timing:"unknown", conditions:"No published AU third-party policy found.", url:"", notes:"Validate in store." },
+      { name:"Zara", type:"Chain", verdict:"unc", timing:"unknown", conditions:"No published AU third-party policy found.", url:"", notes:"Validate in store." },
+      { name:"Country Road", type:"Chain", verdict:"unc", timing:"unknown", conditions:"No published third-party policy found.", url:"", notes:"Validate in store." },
+      { name:"Just Jeans", type:"Chain", verdict:"unc", timing:"unknown", conditions:"No published third-party policy found (Premier Investments).", url:"", notes:"Validate in store." },
+      { name:"Peter Alexander", type:"Chain", verdict:"unc", timing:"unknown", conditions:"No published third-party policy found (Premier Investments).", url:"", notes:"Validate in store. Gift-heavy brand — good Pakd fit if yes." },
+      { name:"Smiggle", type:"Chain", verdict:"unc", timing:"unknown", conditions:"No published third-party policy found (Premier Investments).", url:"", notes:"Validate in store." },
+      { name:"Spotlight", type:"Chain", verdict:"unc", timing:"unknown", conditions:"No published third-party policy found.", url:"", notes:"Validate in store." },
+      { name:"Baby Bunting", type:"Chain", verdict:"unc", timing:"unknown", conditions:"No published third-party policy found.", url:"", notes:"Validate in store. New parents = time-poor customers — strong Pakd demographic." },
+      { name:"Petbarn", type:"Chain", verdict:"unc", timing:"unknown", conditions:"No published third-party policy found. Sister concept PETstock allows nominated collectors.", url:"", notes:"Validate in store." },
+      { name:"City Beach", type:"Chain", verdict:"unc", timing:"unknown", conditions:"No published third-party policy found.", url:"", notes:"Validate in store." },
+      { name:"Kathmandu", type:"Chain", verdict:"unc", timing:"unknown", conditions:"No published third-party policy found.", url:"", notes:"Validate in store." },
+      { name:"Decathlon", type:"Chain", verdict:"unc", timing:"unknown", conditions:"No published AU third-party policy found.", url:"", notes:"Validate in store." },
+      { name:"Adairs", type:"Chain", verdict:"unc", timing:"unknown", conditions:"No published third-party policy found.", url:"", notes:"Validate in store." },
+      { name:"Freedom", type:"Chain", verdict:"unc", timing:"unknown", conditions:"No published third-party policy found.", url:"", notes:"Validate in store. Bulky items — vehicle consideration." },
+      { name:"Total Tools", type:"Chain", verdict:"unc", timing:"unknown", conditions:"No published third-party policy found.", url:"", notes:"Validate in store. Tradie demand could suit early-morning Pakd runs." },
+      { name:"Mitre 10", type:"Chain", verdict:"unc", timing:"unknown", conditions:"No published third-party policy found. Independent-owner network — policies may vary by store.", url:"", notes:"Validate per store." },
+      { name:"Repco", type:"Chain", verdict:"unc", timing:"unknown", conditions:"No published third-party policy found.", url:"", notes:"Validate in store." },
+      { name:"Jaycar", type:"Chain", verdict:"unc", timing:"unknown", conditions:"No published third-party policy found.", url:"", notes:"Validate in store." },
+      { name:"Telstra", type:"Chain", verdict:"unc", timing:"unknown", conditions:"Devices on plans likely require the account holder in person (contract + ID). Outright-purchase accessories unconfirmed.", url:"", notes:"Likely account-holder-only for devices — low priority." }
+    ];
+    seed.forEach(function(s, i){
+      var exists = entries.some(function(e){ return (e.name||"").toLowerCase() === s.name.toLowerCase(); });
+      if (exists) return;
+      entries.push({
+        id: "seed3_" + i, at: new Date(now - (seed.length - i) * 60000).toISOString(),
+        source: "online", name: s.name, suburb: "Chain-wide policy", type: s.type,
+        verdict: s.verdict, timing: s.timing, conditions: s.conditions,
+        url: s.url, demand: 0, notes: s.notes
+      });
+    });
+    localStorage.setItem(SEED_KEY, "1");
+    localStorage.setItem(KEY, JSON.stringify(entries));
+  }
+
+  /* phoned-store batch — real calls made by founder, June 2026. Separate key so it merges into an already-loaded tracker. */
+  var PHONE_KEY = "pakd-fieldlog-phoned-v1";
+  if (!localStorage.getItem(PHONE_KEY)) {
+    var pnow = Date.now();
+    var phoned = [
+      { name:"Kmart Kotara", suburb:"Kotara NSW (phoned)", type:"Chain", verdict:"yes", timing:"after", conditions:"Barcode + a Collection Authority showing the customer's name + the order number. Person doesn't need to be pre-nominated at checkout if they carry those.", url:"", notes:"PHONED. Confirmed third-party pickup works with barcode + authority + order number." },
+      { name:"Kmart Waratah", suburb:"Waratah NSW (phoned)", type:"Chain", verdict:"yes", timing:"after", conditions:"Barcode + the collector's photo ID.", url:"", notes:"PHONED. Simpler requirement than Kotara — shows requirements vary by branch." },
+      { name:"Kmart Glebe", suburb:"Glebe, Sydney (phoned)", type:"Chain", verdict:"cond", timing:"after", conditions:"Barcode is the main thing; staff are 'supposed to ask for ID but rarely do'. With barcode + collector ID + Collection Authority, staff believes it's fine but won't guarantee.", url:"", notes:"PHONED. Staff recognised the crowd-source model and flagged occasional counter pushback is possible. Carry barcode + authority + ID + order number to cover all cases." },
+      { name:"Apple Kotara", suburb:"Kotara NSW (phoned)", type:"Chain", verdict:"cond", timing:"after", conditions:"Nominate an alternative pickup person. QR code + collector's photo ID + Pakd Collection Authority. NOTE: certain products/payment methods are excluded from third-party pickup.", url:"https://www.apple.com/au/shop/help/viewing_changing_orders", notes:"PHONED. Confirms published policy. For first delivery use a standard accessory, not a financed iPhone." },
+      { name:"Nike (Sydney)", suburb:"Sydney (phoned)", type:"Chain", verdict:"no", timing:"none", conditions:"No click & collect offered at all — online is ship-to-home only (Nike runs its own store-to-home delivery).", url:"", notes:"PHONED. N/A for Pakd — no pickup option to collect. Not a rejection of the model; just no C&C." },
+      { name:"JD Sports", suburb:"(phoned)", type:"Chain", verdict:"unc", timing:"unknown", conditions:"No click & collect currently — but launching soon. Revisit once C&C goes live.", url:"", notes:"PHONED. WATCH LIST. Sneaker/sports = strong Pakd demand category. Follow up when C&C launches." },
+      { name:"Good Games Broadmeadow", suburb:"Broadmeadow NSW (phoned)", type:"Independent", verdict:"no", timing:"none", conditions:"No click & collect system at all.", url:"", notes:"PHONED. N/A — no pickup to collect. Pattern: smaller specialty stores often lack C&C entirely." }
+    ];
+    phoned.forEach(function(s, i){
+      var dup = entries.some(function(e){ return (e.name||"").toLowerCase() === s.name.toLowerCase(); });
+      if (dup) return;
+      entries.push({
+        id: "phone_" + i, at: new Date(pnow - (phoned.length - i) * 60000).toISOString(),
+        source: "visit", name: s.name, suburb: s.suburb, type: s.type,
+        verdict: s.verdict, timing: s.timing, conditions: s.conditions,
+        url: s.url, demand: 0, notes: s.notes
+      });
+    });
+    localStorage.setItem(PHONE_KEY, "1");
+    localStorage.setItem(KEY, JSON.stringify(entries));
+  }
+
+  var form = { source:"visit", name:"", suburb:"", type:"", verdict:"", timing:"", conditions:"", url:"", demand:0, notes:"" };
+  var currentFilter = "all";
+
+  function persist(){ localStorage.setItem(KEY, JSON.stringify(entries)); }
+  function toast(msg){
+    var t = document.getElementById("toast");
+    document.getElementById("toast-msg").textContent = msg;
+    t.classList.add("show");
+    clearTimeout(toast._t);
+    toast._t = setTimeout(function(){ t.classList.remove("show"); }, 1800);
+  }
+  function verdictLabel(v){ return { yes:"Yes", cond:"Conditional", no:"No", unc:"Unclear" }[v] || v; }
+  function timingLabel(t){ return { anytime:"Anytime / barcode", after:"After order", checkout:"Checkout only", none:"No formal system", unknown:"Timing unknown" }[t] || ""; }
+  function isTier1(e){
+    return (e.verdict === "yes" || e.verdict === "cond") && (e.timing === "anytime" || e.timing === "after" || e.timing === "none");
+  }
+  function escapeHtml(s){
+    return String(s||"").replace(/[&<>"']/g, function(c){
+      return { "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#x27;" }[c];
+    });
+  }
+
+  function renderStats(){
+    var y=0,c=0,t1=0;
+    entries.forEach(function(e){
+      if (e.verdict==="yes") y++;
+      else if (e.verdict==="cond") c++;
+      if (isTier1(e)) t1++;
+    });
+    document.getElementById("ct-total").textContent = entries.length;
+    document.getElementById("ct-t1").textContent = t1;
+    document.getElementById("ct-yes").textContent = y;
+    document.getElementById("ct-cond").textContent = c;
+  }
+
+  function matches(e){
+    if (currentFilter==="all") return true;
+    if (currentFilter==="tier1") return isTier1(e);
+    if (currentFilter==="visit" || currentFilter==="online") return e.source===currentFilter;
+    return e.verdict===currentFilter;
+  }
+
+  function renderEntries(){
+    var wrap = document.getElementById("entries");
+    var filtered = entries.filter(matches);
+    document.getElementById("log-count").textContent = filtered.length + (filtered.length===1 ? " entry" : " entries");
+    wrap.innerHTML = "";
+    if (filtered.length===0){
+      var empty = document.createElement("div");
+      empty.className = "empty";
+      empty.textContent = entries.length===0 ? "No stores logged yet. Fill in the form above to add your first." : "No matches for this filter.";
+      wrap.appendChild(empty);
+      return;
+    }
+    filtered.slice().reverse().forEach(function(e){
+      var el = document.createElement("div");
+      el.className = "entry";
+      var meta = [];
+      meta.push('<span class="src ' + (e.source==="online" ? "online" : "visit") + '">' + (e.source==="online" ? "🔎 Online review" : "🏬 Visited") + '</span>');
+      if (e.timing) meta.push('<span>' + escapeHtml(timingLabel(e.timing)) + '</span>');
+      if (e.type) meta.push('<span>' + escapeHtml(e.type) + '</span>');
+      if (e.demand) meta.push('<span class="stars-small">' + "★".repeat(e.demand) + "☆".repeat(5-e.demand) + '</span>');
+      meta.push('<span>' + new Date(e.at).toLocaleDateString("en-AU",{day:"numeric",month:"short"}) + '</span>');
+
+      el.innerHTML =
+        '<div class="top">' +
+          '<div><div class="name">' + escapeHtml(e.name) + (isTier1(e) ? ' <span class="tier1">Tier 1</span>' : '') + '</div>' +
+          (e.suburb ? '<div class="sub">' + escapeHtml(e.suburb) + '</div>' : '') +
+          '</div>' +
+          '<span class="pill ' + e.verdict + '">' + verdictLabel(e.verdict) + '</span>' +
+        '</div>' +
+        '<div class="meta">' + meta.join("") + '</div>' +
+        (e.conditions ? '<div class="note"><strong>Requirements:</strong> ' + escapeHtml(e.conditions) + '</div>' : '') +
+        (e.url ? '<div class="note"><a href="' + escapeHtml(e.url) + '" target="_blank" rel="noopener">Policy source ↗</a></div>' : '') +
+        (e.notes ? '<div class="note">' + escapeHtml(e.notes) + '</div>' : '') +
+        '<div class="actions"><button class="edit" data-id="' + e.id + '">Edit</button><button class="del" data-id="' + e.id + '">Delete</button></div>';
+      wrap.appendChild(el);
+    });
+    wrap.querySelectorAll(".del").forEach(function(btn){
+      btn.onclick = function(){
+        var id = btn.getAttribute("data-id");
+        if (!confirm("Delete this entry? This cannot be undone.")) return;
+        entries = entries.filter(function(e){ return e.id !== id; });
+        if (editingId === id) cancelEdit();
+        persist(); renderAll(); toast("Deleted");
+      };
+    });
+    wrap.querySelectorAll(".edit").forEach(function(btn){
+      btn.onclick = function(){
+        var id = btn.getAttribute("data-id");
+        var e = entries.find(function(x){ return x.id === id; });
+        if (!e) return;
+        startEdit(e);
+      };
+    });
+  }
+
+  var editingId = null;
+  function startEdit(e){
+    editingId = e.id;
+    form = { source:e.source||"visit", name:e.name||"", suburb:e.suburb||"", type:e.type||"", verdict:e.verdict||"", timing:e.timing||"", conditions:e.conditions||"", url:e.url||"", demand:e.demand||0, notes:e.notes||"" };
+    document.getElementById("f-name").value = form.name;
+    document.getElementById("f-suburb").value = form.suburb;
+    document.getElementById("f-type").value = form.type;
+    document.getElementById("f-conditions").value = form.conditions;
+    document.getElementById("f-url").value = form.url;
+    document.getElementById("f-notes").value = form.notes;
+    document.querySelectorAll("#f-source button").forEach(function(b){ b.classList.toggle("on", b.getAttribute("data-s")===form.source); });
+    document.querySelectorAll("#f-verdict button").forEach(function(b){ b.classList.toggle("on", b.getAttribute("data-v")===form.verdict); });
+    document.querySelectorAll("#f-timing button").forEach(function(b){ b.classList.toggle("on", b.getAttribute("data-t")===form.timing); });
+    document.querySelectorAll("#f-demand button").forEach(function(b,i){ b.classList.toggle("on", (i+1)<=form.demand); });
+    document.getElementById("conditions-field").style.display = (form.verdict==="cond"||form.verdict==="yes") ? "block" : "none";
+    document.getElementById("url-field").style.display = form.source==="online" ? "block" : "none";
+    document.getElementById("demand-field").style.display = form.source==="online" ? "none" : "block";
+    document.getElementById("save-btn").innerHTML = 'Update · ' + escapeHtml(form.name) + ' <span>✓</span>';
+    document.getElementById("cancel-edit").style.display = "block";
+    window.scrollTo({ top: document.getElementById("form-card").offsetTop - 10, behavior: "smooth" });
+    toast("Editing " + form.name);
+  }
+  function cancelEdit(){
+    editingId = null;
+    resetForm();
+    document.getElementById("save-btn").innerHTML = 'Save entry <span>→</span>';
+    document.getElementById("cancel-edit").style.display = "none";
+  }
+  function resetForm(){
+    form = { source: form.source || "visit", name:"", suburb:"", type:"", verdict:"", timing:"", conditions:"", url:"", demand:0, notes:"" };
+    ["f-name","f-suburb","f-conditions","f-url","f-notes"].forEach(function(id){ document.getElementById(id).value=""; });
+    document.getElementById("f-type").value="";
+    document.getElementById("conditions-field").style.display="none";
+    document.querySelectorAll("#f-verdict button, #f-timing button, #f-demand button").forEach(function(b){ b.classList.remove("on"); });
+  }
+
+  function renderAll(){ renderStats(); renderEntries(); }
+
+  /* SOURCE */
+  document.querySelectorAll("#f-source button").forEach(function(b){
+    b.onclick = function(){
+      document.querySelectorAll("#f-source button").forEach(function(x){ x.classList.remove("on"); });
+      b.classList.add("on");
+      form.source = b.getAttribute("data-s");
+      document.getElementById("url-field").style.display = form.source==="online" ? "block" : "none";
+      document.getElementById("demand-field").style.display = form.source==="online" ? "none" : "block";
+    };
+  });
+
+  /* VERDICT */
+  document.querySelectorAll("#f-verdict button").forEach(function(b){
+    b.onclick = function(){
+      document.querySelectorAll("#f-verdict button").forEach(function(x){ x.classList.remove("on"); });
+      b.classList.add("on");
+      form.verdict = b.getAttribute("data-v");
+      document.getElementById("conditions-field").style.display = (form.verdict==="cond" || form.verdict==="yes") ? "block" : "none";
+    };
+  });
+
+  /* TIMING */
+  document.querySelectorAll("#f-timing button").forEach(function(b){
+    b.onclick = function(){
+      document.querySelectorAll("#f-timing button").forEach(function(x){ x.classList.remove("on"); });
+      b.classList.add("on");
+      form.timing = b.getAttribute("data-t");
+    };
+  });
+
+  /* STARS */
+  document.querySelectorAll("#f-demand button").forEach(function(b){
+    b.onclick = function(){
+      var n = parseInt(b.getAttribute("data-s"));
+      form.demand = (form.demand === n ? 0 : n);
+      document.querySelectorAll("#f-demand button").forEach(function(x,i){
+        x.classList.toggle("on", (i+1) <= form.demand);
+      });
+    };
+  });
+
+  function bind(id,key){
+    document.getElementById(id).addEventListener("input", function(e){ form[key] = e.target.value; });
+  }
+  bind("f-name","name"); bind("f-suburb","suburb"); bind("f-conditions","conditions"); bind("f-url","url"); bind("f-notes","notes");
+  document.getElementById("f-type").addEventListener("change", function(e){ form.type = e.target.value; });
+
+  /* SAVE */
+  document.getElementById("save-btn").onclick = function(){
+    if (!form.name.trim()){ toast("Add a store name"); document.getElementById("f-name").focus(); return; }
+    if (!form.verdict){ toast("Pick their answer"); return; }
+    if (editingId){
+      var ex = entries.find(function(x){ return x.id === editingId; });
+      if (ex){
+        ex.source = form.source; ex.name = form.name.trim(); ex.suburb = form.suburb.trim(); ex.type = form.type;
+        ex.verdict = form.verdict; ex.timing = form.timing; ex.conditions = form.conditions.trim();
+        ex.url = form.url.trim(); ex.demand = form.demand; ex.notes = form.notes.trim();
+        ex.updatedAt = new Date().toISOString();
+        persist(); renderAll();
+        toast("Updated · " + ex.name + (isTier1(ex) ? " · Tier 1 ✦" : ""));
+      }
+      cancelEdit();
+      window.scrollTo({ top: document.querySelector(".log-head").offsetTop - 12, behavior: "smooth" });
+      return;
+    }
+    var entry = {
+      id: "e_" + Date.now() + "_" + Math.random().toString(36).slice(2,7),
+      at: new Date().toISOString(),
+      source: form.source, name: form.name.trim(), suburb: form.suburb.trim(), type: form.type,
+      verdict: form.verdict, timing: form.timing, conditions: form.conditions.trim(),
+      url: form.url.trim(), demand: form.demand, notes: form.notes.trim()
+    };
+    entries.push(entry); persist(); renderAll();
+    resetForm();
+    window.scrollTo({ top: document.querySelector(".log-head").offsetTop - 12, behavior: "smooth" });
+    toast("Saved · " + entry.name + (isTier1(entry) ? " · Tier 1 ✦" : ""));
+  };
+
+  /* CANCEL EDIT */
+  document.getElementById("cancel-edit").onclick = function(){
+    cancelEdit();
+    toast("Edit cancelled");
+  };
+
+  /* FILTER */
+  document.querySelectorAll("#filter button").forEach(function(b){
+    b.onclick = function(){
+      document.querySelectorAll("#filter button").forEach(function(x){ x.classList.remove("on"); });
+      b.classList.add("on");
+      currentFilter = b.getAttribute("data-f");
+      renderEntries();
+    };
+  });
+
+  /* EXPORT */
+  document.getElementById("export-btn").onclick = function(){
+    if (entries.length===0){ toast("Nothing to export yet"); return; }
+    var rows = [["Date","Source","Store","Suburb","Type","Verdict","Nomination timing","Tier 1","Requirements","Policy URL","Demand /5","Notes"]];
+    entries.forEach(function(e){
+      rows.push([
+        new Date(e.at).toLocaleString("en-AU"),
+        e.source==="online" ? "Online review" : "Visited",
+        e.name, e.suburb, e.type, verdictLabel(e.verdict), timingLabel(e.timing),
+        isTier1(e) ? "Yes" : "No",
+        e.conditions, e.url || "", e.demand || "", e.notes
+      ]);
+    });
+    var csv = rows.map(function(r){
+      return r.map(function(c){
+        var s = String(c==null?"":c).replace(/"/g,'""');
+        return /[",\n]/.test(s) ? '"'+s+'"' : s;
+      }).join(",");
+    }).join("\n");
+    var blob = new Blob([csv], { type:"text/csv;charset=utf-8" });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url; a.download = "pakd-store-log-" + new Date().toISOString().slice(0,10) + ".csv";
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+    toast("Exported " + entries.length + " entries");
+  };
+
+  /* CLEAR */
+  document.getElementById("clear-btn").onclick = function(){
+    if (entries.length===0){ toast("Nothing to clear"); return; }
+    if (!confirm("Delete all " + entries.length + " entries (including the pre-loaded research)? This cannot be undone.")) return;
+    entries = []; persist(); renderAll(); toast("Cleared");
+  };
+
+  renderAll();
+})();
+</script>
+</body>
+</html>
