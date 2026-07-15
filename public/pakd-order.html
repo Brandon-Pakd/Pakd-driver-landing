@@ -120,6 +120,7 @@
       </div>
     </div>
     <button class="upsend" id="up-send" disabled>Send it — we reply within the hour</button>
+    <div class="upfine">$19 flat, anywhere in Sydney · pay by card once we confirm · <b style="color:#8ceec9">your driver is only paid once your delivery is confirmed</b></div>
 
     <div class="wts" style="margin-top:18px">
       <div class="wtsk">WHAT TO SEND (SCREENSHOTS ARE PERFECT)</div>
@@ -155,7 +156,9 @@
   <div class="done" id="done">
     <div class="tick"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l6 6L20 6"/></svg></div>
     <h2>You're set</h2>
-    <p>No waiting, no approval — you're covered. We reply within the hour to confirm your address and send a secure card link ($19 flat) — then your driver's locked in.</p>
+    <p>No waiting, no approval — you're covered. We reply within the hour to confirm your delivery address.</p>
+    <a id="paybtn" href="#" target="_blank" rel="noopener" style="display:none;max-width:340px;margin:0 auto 10px" class="upsend">Secure your delivery now — $19</a>
+    <p id="paysub" style="display:none;font-size:12px;color:var(--sub);line-height:1.55;margin-top:-2px">Pay now and you're locked in the moment we confirm. <b style="color:#8ceec9">Your driver is only paid once your delivery is confirmed — not delivered, fully refunded.</b></p>
     <div id="later-wrap" style="display:none;background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:14px;padding:14px;text-align:left">
       <div style="font-size:11px;font-weight:800;letter-spacing:.08em;color:var(--chip);margin-bottom:6px">WAITING ON YOUR "READY" EMAIL?</div>
       <div style="font-size:13px;color:var(--sub);line-height:1.55">When it arrives, open this link and upload the barcode — that's your driver's green light. <b style="color:#fff">Save it now:</b></div>
@@ -198,6 +201,9 @@
     appId: "1:447255045993:web:b3ff4760b7837b06bdbff8"
   };
   /* ============================================================================== */
+  /* ==== PASTE YOUR LIVE STRIPE PAYMENT LINK HERE (leave "" until live mode) ==== */
+  var PAKD_PAY_LINK = "https://buy.stripe.com/9B65kD86q3du3sScUkdjO00";
+  /* ============================================================================ */
   var db = null;
   try { if (FIREBASE_CONFIG.apiKey !== "PASTE_ME"){ firebase.initializeApp(FIREBASE_CONFIG); db = firebase.firestore(); } } catch(e){}
 
@@ -254,6 +260,10 @@
   $("up-phone").addEventListener("input", maybeEnable);
   $("up-suburb").addEventListener("input", maybeEnable);
   function showSuccess(orderId){
+    if (PAKD_PAY_LINK){
+      var pb = $("paybtn"); pb.href = PAKD_PAY_LINK; pb.style.display = "block";
+      $("paysub").style.display = "block";
+    }
     document.querySelector(".textcard").style.display = "none";
     $("done").style.display = "block";
     if (orderId){
