@@ -247,39 +247,67 @@
   function renderInbox(){
     var w = $("inbox-list"); if (!w) return;
     var open = inboxDocs.filter(function(d){ return !d.imported; });
-    $("tab-inbox").textContent = open.length ? "Inbox (" + open.length + ")" : "Inbox";
-    if (!open.length){ w.innerHTML = '<div class="empty">No new customer orders. They appear here live from your order page.</div>'; return; }
-    w.innerHTML = open.map(function(d){
-      var when = d.createdAt ? new Date(d.createdAt).toLocaleString("en-AU", { day:"numeric", month:"short", hour:"numeric", minute:"2-digit" }) : "";
+    /* group by phone: separate submissions from the same customer merge into one card */
+    var groups = [];
+    var byPhone = {};
+    open.forEach(function(d){
+      var key = (d.phone || "").replace(/\D/g, "");
+      if (key && byPhone[key]){ byPhone[key].docs.push(d); }
+      else {
+        var g = { key: key || ("solo_" + d.id), docs: [d] };
+        groups.push(g);
+        if (key) byPhone[key] = g;
+      }
+    });
+    $("tab-inbox").textContent = groups.length ? "Inbox (" + groups.length + ")" : "Inbox";
+    if (!groups.length){ w.innerHTML = '<div class="empty">No new customer orders. They appear here live from your order page.</div>'; return; }
+    w.innerHTML = groups.map(function(g){
+      var first = g.docs[0];
+      var imgs = [];
+      var hasBarcode = false;
+      g.docs.forEach(function(d){
+        (d.screenshots || (d.screenshot ? [d.screenshot] : [])).forEach(function(s){ imgs.push(s); });
+        if (d.barcode){ imgs.push(d.barcode); hasBarcode = true; }
+      });
+      var times = g.docs.map(function(d){ return d.createdAt ? new Date(d.createdAt).toLocaleString("en-AU", { day:"numeric", month:"short", hour:"numeric", minute:"2-digit" }) : ""; }).filter(Boolean);
       return '<div class="order">' +
-        '<div class="top"><div class="who">' + esc(d.phone || "No phone") + '</div>' +
-        '<span class="status ' + (d.barcode ? "s-ready" : "s-new") + '">' + (d.barcode ? "barcode added" : "new") + '</span></div>' +
-        '<div class="meta">Deliver to <b>' + esc(d.suburb || "?") + '</b>' + (when ? " · " + when : "") + '</div>' +
-        ((d.screenshots || (d.screenshot ? [d.screenshot] : [])).map(function(s){ return '<div style="margin-top:8px;border:1px solid var(--line);border-radius:10px;overflow:hidden"><img src="' + s + '" style="display:block;width:100%" /></div>'; }).join("")) +
-        (d.barcode ? '<div style="margin-top:8px;border:1px solid var(--line);border-radius:10px;overflow:hidden"><img src="' + d.barcode + '" style="display:block;width:100%" /></div>' : "") +
+        '<div class="top"><div class="who">' + esc(first.phone || "No phone") + '</div>' +
+        '<span class="status ' + (hasBarcode ? "s-ready" : "s-new") + '">' + (hasBarcode ? "barcode added" : "new") + '</span></div>' +
+        '<div class="meta">Deliver to <b>' + esc(first.suburb || "?") + '</b>' +
+        (g.docs.length > 1 ? ' · <b>' + g.docs.length + ' uploads from this number</b> (' + times.join(" + ") + ')' : (times[0] ? " · " + times[0] : "")) + '</div>' +
+        imgs.map(function(s, i){ return '<div style="margin-top:8px;border:1px solid var(--line);border-radius:10px;overflow:hidden"><div style="font-size:10px;font-weight:800;letter-spacing:.05em;color:var(--muted);padding:5px 8px;background:#fbfbfe;border-bottom:1px solid var(--line)">SCREENSHOT ' + (i+1) + ' of ' + imgs.length + '</div><img src="' + s + '" style="display:block;width:100%" /></div>'; }).join("") +
         '<div class="acts">' +
-        '<button class="adv" data-use="' + d.id + '">Use → new order</button>' +
-        '<button class="del" data-dismiss="' + d.id + '">Dismiss</button>' +
+        '<button class="adv" data-use="' + g.docs.map(function(d){ return d.id; }).join(",") + '">Use → new order</button>' +
+        '<button class="del" data-dismiss="' + g.docs.map(function(d){ return d.id; }).join(",") + '">Dismiss</button>' +
         '</div></div>';
     }).join("");
     w.querySelectorAll("[data-use]").forEach(function(b){
       b.onclick = function(){
-        var d = inboxDocs.find(function(x){ return x.id === b.getAttribute("data-use"); });
-        importingDocId = d.id;
-        $("n-phone").value = d.phone || "";
+        var ids = b.getAttribute("data-use").split(",");
+        var docs = ids.map(function(id){ return inboxDocs.find(function(x){ return x.id === id; }); }).filter(Boolean);
+        importingDocId = ids.join(",");
+        var first = docs[0];
+        $("n-phone").value = first.phone || "";
         $("n-address").value = "";
-        $("n-address").placeholder = d.suburb ? ("Street address — customer suburb: " + d.suburb) : "Delivery address";
-        var imgs = d.screenshots || (d.screenshot ? [d.screenshot] : []);
-        pendingBarcode = d.barcode || imgs[imgs.length - 1] || null;
-        if (pendingBarcode){ $("n-upzone").classList.add("has"); $("n-uptext").textContent = "Customer screenshot attached ✓"; }
+        $("n-address").placeholder = first.suburb ? ("Street address — customer suburb: " + first.suburb) : "Delivery address";
+        var imgs = [];
+        var explicitBarcode = null;
+        docs.forEach(function(d){
+          (d.screenshots || (d.screenshot ? [d.screenshot] : [])).forEach(function(s){ imgs.push(s); });
+          if (d.barcode) explicitBarcode = d.barcode;
+        });
+        pendingBarcode = explicitBarcode || imgs[imgs.length - 1] || null;
+        if (pendingBarcode){ $("n-upzone").classList.add("has"); $("n-uptext").textContent = "Customer screenshot attached ✓ (latest upload)"; }
         document.querySelector('.tab[data-t="new"]').click();
-        toast("Read the screenshot → fill store, order no, name");
+        toast("Read the screenshots → fill store, order no, name");
       };
     });
     w.querySelectorAll("[data-dismiss]").forEach(function(b){
       b.onclick = function(){
-        if (!confirm("Dismiss this inbox order?")) return;
-        db.collection("orders").doc(b.getAttribute("data-dismiss")).set({ imported: true }, { merge: true });
+        if (!confirm("Dismiss this customer's uploads?")) return;
+        b.getAttribute("data-dismiss").split(",").forEach(function(id){
+          db.collection("orders").doc(id).set({ imported: true }, { merge: true });
+        });
       };
     });
   }
@@ -314,7 +342,9 @@
     $("n-upzone").classList.remove("has");
     $("n-uptext").textContent = "Attach barcode / confirmation screenshot (optional now)";
     if (importingDocId && db){
-      db.collection("orders").doc(importingDocId).set({ imported: true, pipelineId: o.id }, { merge: true });
+      importingDocId.split(",").forEach(function(id){
+        db.collection("orders").doc(id).set({ imported: true, pipelineId: o.id }, { merge: true });
+      });
       importingDocId = null;
     }
     renderAll();

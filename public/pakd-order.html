@@ -208,16 +208,19 @@
   var upzone = $("upzone");
   upzone.addEventListener("click", function(){ $("up-file").click(); });
   $("up-file").addEventListener("change", function(e){
-    var files = Array.prototype.slice.call(e.target.files || []).slice(0, 2);
+    var files = Array.prototype.slice.call(e.target.files || []);
     if (!files.length) return;
-    var out = [];
+    var existing = (upData && upData.length < 2) ? upData.slice() : [];   // add to 1; start over past 2
+    files = files.slice(0, 2 - existing.length);
+    var out = existing;
     var next = function(i){
       if (i >= files.length){
-        upData = out;
-        $("up-thumb").src = out[0]; $("up-thumb").style.display = "block";
+        upData = out.slice(0, 2);
+        $("up-thumb").src = upData[0]; $("up-thumb").style.display = "block";
         upzone.classList.add("has");
-        $("up-title").textContent = out.length === 2 ? "2 screenshots attached" : "Screenshot attached";
-        $("up-sub").textContent = out.length === 2 ? "Confirmation + barcode — perfect. Tap to change." : "Got the barcode email too? Tap again and select both.";
+        $("up-title").textContent = upData.length === 2 ? "2 screenshots attached" : "1 screenshot attached";
+        $("up-sub").textContent = upData.length === 2 ? "Confirmation + barcode — perfect. Tap again to start over." : "Got the barcode email too? Tap to add it — it joins this one.";
+        e.target.value = "";
         maybeEnable();
         return;
       }
