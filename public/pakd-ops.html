@@ -241,6 +241,65 @@
     r.readAsDataURL(f);
   });
 
+  /* ---- screenshot auto-read (on-device OCR, best effort) ---- */
+  function loadTesseract(cb){
+    if (window.Tesseract) return cb(true);
+    if (loadTesseract.loading){ loadTesseract.q.push(cb); return; }
+    loadTesseract.loading = true; loadTesseract.q = [cb];
+    var s = document.createElement("script");
+    s.src = "https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.1.0/tesseract.min.js";
+    s.onload = function(){ loadTesseract.q.forEach(function(f){ f(true); }); };
+    s.onerror = function(){ loadTesseract.q.forEach(function(f){ f(false); }); };
+    document.head.appendChild(s);
+  }
+  function parseOrderText(text){
+    var out = {};
+    var m = text.match(/#\s?(\d{5,12})\b/);
+    if (!m) m = text.match(/order\s*(?:number|no\.?|#)?[:\s]*#?(\d{5,12})\b/i);
+    if (m) out.orderNo = "#" + m[1];
+    var g = text.match(/\bHi\s+([A-Z][a-z]{1,15})\b/);
+    if (g){
+      out.name = g[1];
+      var full = text.match(new RegExp("\\b" + g[1] + "\\s+([A-Z][A-Za-z'\\-]{1,20})\\b"));
+      if (full && full[1].toLowerCase() !== "your") out.name = g[1] + " " + full[1];
+    }
+    var brands = /(kmart|target|myer|big\s?w|david jones|bunnings|jb\s?hi-?fi|officeworks|apple|rebel|bcf|supercheap|chemist warehouse|priceline|cotton on|uniqlo|ikea)/i;
+    var b = text.match(brands);
+    var branch = text.match(/collect (?:at|from)\s+(?:the\s+)?([A-Z][A-Za-z\s]{2,25}?)\s+store/i);
+    var cap = function(s){ s = s.toLowerCase(); return /jb\s?hi-?fi/.test(s) ? "JB Hi-Fi" : s.replace(/\b\w/g, function(c){ return c.toUpperCase(); }); };
+    if (b && branch) out.store = cap(b[1]) + " " + branch[1].trim();
+    else if (b) out.store = cap(b[1]);
+    else if (branch) out.store = branch[1].trim();
+    var a = text.match(/(\d+[^,\n]{2,40},\s*[A-Za-z\s]{2,30},?\s*(?:NSW|QLD|VIC|SA|WA|TAS|ACT|NT)\s*\d{4})/i);
+    if (a) out.address = a[1].replace(/\s+/g," ").trim();
+    return out;
+  }
+  function ocrPrefill(images){
+    if (!images || !images.length) return;
+    toast("Reading screenshots\u2026");
+    loadTesseract(function(ok){
+      if (!ok || !window.Tesseract){ toast("Auto-read unavailable \u2014 fill fields manually"); return; }
+      var texts = [];
+      var next = function(i){
+        if (i >= Math.min(images.length, 2)){
+          var p = parseOrderText(texts.join("\n"));
+          var filled = [];
+          if (p.name && !$("n-name").value){ $("n-name").value = p.name; filled.push("name"); }
+          if (p.store && !$("n-store").value){ $("n-store").value = p.store; filled.push("store"); }
+          if (p.orderNo && !$("n-orderno").value){ $("n-orderno").value = p.orderNo; filled.push("order no"); }
+          if (p.address && !$("n-address").value){ $("n-address").value = p.address; filled.push("address"); }
+          toast(filled.length ? "Auto-read: " + filled.join(", ") + " \u2014 double-check before publishing" : "Couldn\u2019t auto-read \u2014 fill fields manually");
+          return;
+        }
+        window.Tesseract.recognize(images[i], "eng").then(function(r){
+          texts.push((r && r.data && r.data.text) || "");
+          next(i + 1);
+        }).catch(function(){ next(i + 1); });
+      };
+      next(0);
+    });
+  }
+
   /* inbox (live customer orders) */
   var inboxDocs = [];
   var importingDocId = null;
@@ -299,7 +358,7 @@
         pendingBarcode = explicitBarcode || imgs[imgs.length - 1] || null;
         if (pendingBarcode){ $("n-upzone").classList.add("has"); $("n-uptext").textContent = "Customer screenshot attached ✓ (latest upload)"; }
         document.querySelector('.tab[data-t="new"]').click();
-        toast("Read the screenshots → fill store, order no, name");
+        ocrPrefill(imgs);
       };
     });
     w.querySelectorAll("[data-dismiss]").forEach(function(b){
