@@ -334,7 +334,7 @@
       <div style="padding:14px 2px;border-bottom:1px solid rgba(255,255,255,.07)"><b style="font-size:14px">Founding driver status</b><div style="font-size:12.5px;color:var(--sub);line-height:1.55;margin-top:3px">Sydney is live — Brisbane and Melbourne open next, in order of driver numbers. Early drivers get first pick.</div></div>
     </div>
     <a href="/pakd-jobs.html" style="display:block;background:var(--indigo);color:#fff;border-radius:13px;padding:15px;font-weight:800;font-size:14.5px;text-decoration:none;text-align:center;margin-top:18px;box-shadow:0 6px 18px rgba(99,102,241,.3)">Sign up &amp; see live jobs →</a>
-    <div style="text-align:center;font-size:11.5px;color:var(--muted);margin-top:9px">20-second setup on your phone — you're then ready to claim any job, any time</div>
+    <div style="text-align:center;font-size:11.5px;color:var(--muted);margin-top:9px">Opens the driver job board · 20-second setup, then you can claim any job, any time</div>
   </div>
 
   <div style="margin:26px 8px 10px;padding-top:16px;border-top:1px solid var(--line);text-align:center;font-size:11.5px;color:var(--sub);line-height:1.7">
@@ -440,7 +440,10 @@
     if (host) host.querySelectorAll(".sect").forEach(function(s){
       if (s.getBoundingClientRect().top < window.innerHeight * 1.2) s.classList.add("in");
     });
-    if (location.hash !== "#" + v) { try { history.pushState(null, "", "#" + v); } catch(e){} }
+    if (location.hash !== "#" + v) {
+      try { history[showView.booted ? "pushState" : "replaceState"](null, "", "#" + v); } catch(e){}
+    }
+    showView.booted = true;
     window.scrollTo({ top: 0 });
   }
   document.querySelectorAll("[data-view]").forEach(function(a){
@@ -450,7 +453,12 @@
     var v = (location.hash || "#home").slice(1);
     if (["home","order","drive"].indexOf(v) > -1) showView(v);
   });
-  var initView = (location.hash || "#home").slice(1);
+  var initView = (location.hash || "").slice(1);
+  if (!initView){
+    var p = (location.pathname || "").toLowerCase();
+    if (p.indexOf("/drive") === 0) initView = "drive";
+    else if (p.indexOf("/order") === 0) initView = "order";
+  }
   if (["home","order","drive"].indexOf(initView) === -1) initView = "home";
   showView(initView);
 
