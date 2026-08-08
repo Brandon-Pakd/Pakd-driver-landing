@@ -1,9 +1,0 @@
-{
-  "rewrites": [
-    { "source": "/", "destination": "/pakd-order.html" },
-    { "source": "/order", "destination": "/pakd-order.html" },
-    { "source": "/drive", "destination": "/pakd-order.html" },
-    { "source": "/jobs", "destination": "/pakd-jobs.html" },
-    { "source": "/log", "destination": "/pakd-field-log.html" }
-  ]
-}
