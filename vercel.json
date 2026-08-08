@@ -1,11 +1,9 @@
 {
-  "redirects": [
-    { "source": "/", "destination": "/pakd-order.html", "permanent": false }
-  ],
   "rewrites": [
+    { "source": "/", "destination": "/pakd-order.html" },
     { "source": "/order", "destination": "/pakd-order.html" },
+    { "source": "/drive", "destination": "/pakd-order.html" },
     { "source": "/jobs", "destination": "/pakd-jobs.html" },
-    { "source": "/drive", "destination": "/index.html" },
     { "source": "/log", "destination": "/pakd-field-log.html" }
   ]
 }
